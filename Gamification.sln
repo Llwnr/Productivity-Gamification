@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{31DAB2C9-9F39-44E3-A729-1177416F9D9A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{EE9364B8-972D-4A9C-8A34-66185C31D40E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamification.Desktop.UI", "Gamification.Desktop.UI\Gamification.Desktop.UI.csproj", "{7A0400A0-EC45-44A5-8BD3-00C9899527CE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{27B89846-A96B-4096-B00C-9DD030E0C49E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EE9364B8-972D-4A9C-8A34-66185C31D40E} = {31DAB2C9-9F39-44E3-A729-1177416F9D9A}
+		{7A0400A0-EC45-44A5-8BD3-00C9899527CE} = {EE9364B8-972D-4A9C-8A34-66185C31D40E}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A0400A0-EC45-44A5-8BD3-00C9899527CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A0400A0-EC45-44A5-8BD3-00C9899527CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A0400A0-EC45-44A5-8BD3-00C9899527CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A0400A0-EC45-44A5-8BD3-00C9899527CE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
