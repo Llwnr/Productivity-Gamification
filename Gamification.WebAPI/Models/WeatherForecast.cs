@@ -1,4 +1,4 @@
-namespace Gamification.WebAPI;
+namespace Gamification.WebAPI.Models;
 
 public class WeatherForecast{
     public DateOnly Date{ get; set; }

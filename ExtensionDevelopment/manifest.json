@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Site Monitor",
+  "version": "1.0",
+  "description": "Monitors visited sites and sends data to a C# API.",
+  "permissions": [
+    "webNavigation",
+    "tabs",
+    "windows",
+    "nativeMessaging",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:5160/*",
+    "https://localhost:7131/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+   "action":{
+     "default_popup": "hello.html"
+   }
+
+}

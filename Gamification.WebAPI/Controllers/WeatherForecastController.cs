@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
+using Gamification.WebAPI.Models;
 namespace Gamification.WebAPI.Controllers;
 
 [ApiController]
