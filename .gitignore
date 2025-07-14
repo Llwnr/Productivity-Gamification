@@ -42,8 +42,7 @@ Thumbs.db
 
 #========================================================================
 # .NET / C# Build Artifacts
-appsettings.json
-appsettings.Development.json
+appsettings*.json
 #========================================================================
 
 # Binaries, build outputs, NuGet packages
