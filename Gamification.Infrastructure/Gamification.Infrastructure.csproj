@@ -7,7 +7,24 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="DatabaseHelper\" />
+      <PackageReference Include="DotNetEnv" Version="3.1.1" />
+      <PackageReference Include="Google_GenerativeAI" Version="2.7.0" />
+      <PackageReference Include="Google_GenerativeAI.Tools" Version="2.7.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Npgsql" Version="9.0.3" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Gamification.Core\Gamification.Core.csproj" />
     </ItemGroup>
 
 </Project>

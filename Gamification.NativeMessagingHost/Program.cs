@@ -1,7 +1,7 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿namespace Gamification.NativeMessagingHost;
 
-namespace Gamification.NativeMessagingHost;
+using System.Text;
+using System.Text.Json;
 
 class Program{
     private static string LogFilePath = Path.Combine(AppContext.BaseDirectory, "native_host_msg_logs.txt");

@@ -8,6 +8,19 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Gamification.Core\Gamification.Core.csproj" />
+      <ProjectReference Include="..\Gamification.Infrastructure\Gamification.Infrastructure.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <None Update=".env" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>

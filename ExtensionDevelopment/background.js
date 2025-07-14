@@ -1,4 +1,7 @@
 const API_BASE_URL = "http://localhost:5160/SiteMonitor";
+const API_ENDPOINT = "AnalyzeSite";
+
+const userGoal = "Game Developer";
 
 var activeTabId = null;
 var activeFullUrl = null;
@@ -34,25 +37,30 @@ function getTitleAndDescription(tabId, callback) {
   }, ([result]) => callback(result?.result));
 }
 
+var siteSetWaitId = 99999999; 
 function setSiteVisited(url, tabId, triggerType) {
 	//Check if its a valid url
 	if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) return;
 	if (activeFullUrl == url && activeTabId == tabId) return; //Don't do anything if same page and same tab
 
+	clearTimeout(siteSetWaitId);
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
-    getTitleAndDescription(tabId, (tags) => {
-        const title = (tags.title == null || tags.title.length > 0) ? tags.title : "null";
-        const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
-        fetch(`${API_BASE_URL}/SiteBrowsed?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`)
-        .then(response => {
-            if (!response.ok) {
-                console.error(`API call failed with status: ${response.status}`);
-            }
-        })
-        .catch(error => {
-            console.error(`Error fetching SiteBrowsed API: ${error}`);
-        });
-    });
+    siteSetWaitId = setTimeout(()=>{
+		getTitleAndDescription(tabId, (tags) => {
+			const title = (tags.title == null || tags.title.length > 0) ? tags.title : "null";
+			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
+            const api_url = `${API_BASE_URL}/${API_ENDPOINT}?userGoal=${encodeURIComponent(userGoal)}&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`;
+			fetch(api_url)
+			.then(response => {
+				if (!response.ok) {
+					console.error(`API call failed with status: ${response.status}\nUrl:${api_url}`);
+				}
+			})
+			.catch(error => {
+				console.error(`Error fetching SiteBrowsed API: ${error}`);
+			});
+		})
+		},1000);
 
 	activeTabId = tabId;
 	activeFullUrl = url
@@ -124,7 +132,7 @@ function connectToNativeHost() {
         }
         port = null; // Clear the port
         // Optionally, try to reconnect after a delay
-        // setTimeout(connectToNativeHost, 5000);
+        setTimeout(connectToNativeHost, 5000);
     });
 
     console.log("Native port connected (or connection attempt initiated).");
