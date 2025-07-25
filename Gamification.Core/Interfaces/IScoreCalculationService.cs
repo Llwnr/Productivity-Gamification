@@ -1,5 +1,5 @@
 namespace Gamification.Core.Interfaces;
 
-public interface IProductivityService{
+public interface IScoreCalculationService{
     public float GetFinalScore(int intrinsicScore, float relevanceScore);
 }

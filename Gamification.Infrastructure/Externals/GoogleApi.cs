@@ -7,7 +7,7 @@ using Gamification.Infrastructure.Interfaces;
 namespace Gamification.Infrastructure.Externals;
 
 public class GoogleApi{
-    private readonly GoogleAi? googleAi;
+    private readonly GoogleAi? _googleAi;
 
     public GoogleApi(){
         Env.Load();
@@ -18,16 +18,16 @@ public class GoogleApi{
             return;
         }
         
-        googleAi = new GoogleAi(apiKey);
+        _googleAi = new GoogleAi(apiKey);
     }
 
     public async Task<SiteAnalysis?> Generate(string prompt){
-        if (googleAi == null){
+        if (_googleAi == null){
             Console.WriteLine("Google AI Api is not set up");
             return null;
         }
         
-        var model = googleAi.CreateGenerativeModel(GoogleAIModels.Gemini2Flash);
+        var model = _googleAi.CreateGenerativeModel(GoogleAIModels.Gemini2Flash);
         model.SystemInstruction =
             "You are an expert web analyst. " +
             "Your task is to perform a two-part analysis " +

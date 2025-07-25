@@ -98,7 +98,7 @@ class Program{
     }
 
     public static async Task NotifyBrowserClosure(){
-        string finalAPI = APIBase + "/BrowserClosed";
+        string finalAPI = APIBase + "/BrowsingStopped";
         try{
             HttpClient client = new HttpClient();
             using HttpResponseMessage res = await client.GetAsync(finalAPI);

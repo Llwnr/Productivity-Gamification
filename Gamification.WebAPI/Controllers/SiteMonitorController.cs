@@ -2,16 +2,18 @@ using Microsoft.AspNetCore.Mvc;
 using Gamification.Infrastructure.Externals;
 using Gamification.Core.Models;
 using Gamification.Core.Interfaces;
+using Gamification.Infrastructure.DatabaseService;
+using Gamification.Infrastructure.Services;
 
 namespace Gamification.WebAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 public class SiteMonitorController : ControllerBase{
-    private readonly IProductivityService _productivityService;
+    private readonly ISiteAnalysisService _siteAnalysisService;
     
-    public SiteMonitorController(IProductivityService service){
-        _productivityService = service;
+    public SiteMonitorController(ISiteAnalysisService siteAnalysisService){
+        _siteAnalysisService = siteAnalysisService;
     }
     
     /// <summary>
@@ -19,33 +21,13 @@ public class SiteMonitorController : ControllerBase{
     /// </summary>
     [HttpGet("AnalyzeSite")]
     public async Task AnalyzeSite(string userGoal, string url, string title, string desc){
-        string fullPrompt = $"\nUserGoal: {userGoal}\nSiteUrl: {url}\nDescription: {desc}\nTitle:{title}.";
-        Console.WriteLine("Url browsed: " + url);
-
-        GoogleApi googleApi = new GoogleApi();
-        try{
-            SiteAnalysis? analysis = await googleApi.Generate(fullPrompt);
-            if (analysis != null){
-                float finalScore = _productivityService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
-                Console.WriteLine($"Score: {finalScore}");
-                Console.WriteLine($"Visited time: {DateTime.Now}");
-            }
-            else{
-                Console.Error.WriteLine("Analysis is null");
-            }
-        }
-        catch (Exception e){
-            await Console.Error.WriteLineAsync("Exception while generating site analysis response from LLM: \n" + e);
-            throw;
-        }
+        bool success = await _siteAnalysisService.AnalyzeSite(userGoal, url, title, desc);
+        if(success) Console.WriteLine("Successfully analyzed site");
+        else Console.WriteLine("Failed to analyze site");
     }
 
-    [HttpGet("BrowserClosed")]
+    [HttpGet("BrowsingStopped")]
     public void NotifyBrowserClosed(){
-        Console.WriteLine("Browser is closed");
-    }
-    
-    public void TrackDurationOnUrl(string url){
-        Console.WriteLine("Tracking duration on: " + url);
+        Console.WriteLine("User has stopped browsing.");
     }
 }

@@ -1,7 +1,7 @@
 namespace Gamification.Core.Models;
-
-using System.Text.Json.Serialization;
-
+/// <summary>
+/// Class that guides the LLM to provide output in this format. NOT FOR DATABASE models.
+/// </summary>
 public class SiteAnalysis{
     public List<string> Category { get; set; }
     // public string Justification{ get; set; }

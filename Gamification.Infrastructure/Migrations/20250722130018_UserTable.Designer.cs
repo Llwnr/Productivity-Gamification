@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Gamification.Infrastructure.DatabaseService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    partial class ProductivityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250722130018_UserTable")]
+    partial class UserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,40 +65,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasDatabaseName("ix_analysis_results_site_id_user_goal");
 
                     b.ToTable("analysis_results", (string)null);
-                });
-
-            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
-                {
-                    b.Property<int>("StatId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("stat_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StatId"));
-
-                    b.Property<int>("Coin")
-                        .HasColumnType("integer")
-                        .HasColumnName("coin");
-
-                    b.Property<float>("ExperiencePoints")
-                        .HasColumnType("real")
-                        .HasColumnName("experience_points");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("StatId")
-                        .HasName("pk_game_stats");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_game_stats_user_id");
-
-                    b.ToTable("game_stats", (string)null);
                 });
 
             modelBuilder.Entity("Gamification.Core.Models.Site", b =>
@@ -219,18 +188,6 @@ namespace Gamification.Infrastructure.Migrations
                     b.Navigation("Site");
                 });
 
-            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
-                {
-                    b.HasOne("Gamification.Core.Models.User", "User")
-                        .WithMany("GameStats")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_game_stats_users_user_id");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
                 {
                     b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
@@ -271,8 +228,6 @@ namespace Gamification.Infrastructure.Migrations
 
             modelBuilder.Entity("Gamification.Core.Models.User", b =>
                 {
-                    b.Navigation("GameStats");
-
                     b.Navigation("UserSiteVisits");
                 });
 #pragma warning restore 612, 618

@@ -37,20 +37,42 @@ function getTitleAndDescription(tabId, callback) {
   }, ([result]) => callback(result?.result));
 }
 
-var siteSetWaitId = 99999999; 
-function setSiteVisited(url, tabId, triggerType) {
-	//Check if its a valid url
-	if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) return;
+async function getIdToken(){
+    return await chrome.storage.local.get(['authToken']).authToken;
+}
+
+var siteAnalysisDebouncer = 99999999; 
+async function setSiteVisited(url, tabId, triggerType) {
+    let token = await getIdToken();
+    if(token == null){
+        console.log("Token is null");
+        return;
+    }
+    if(!url) return;
+    //Check if tab has been switched to a non browsable url i.e. browser setting pages etc
+    if(triggerType == 'tabSwitched' && !(url.startsWith('http://') || url.startsWith('https://'))){
+        await notifyBrowsingStopped();
+        return;
+    }
+
+	//Check if its a valid browsable url and not the browser's settings stuff
+	if (!url.startsWith('http://') && !url.startsWith('https://')) return;
 	if (activeFullUrl == url && activeTabId == tabId) return; //Don't do anything if same page and same tab
 
-	clearTimeout(siteSetWaitId);
+	clearTimeout(siteAnalysisDebouncer);
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
-    siteSetWaitId = setTimeout(()=>{
+    siteAnalysisDebouncer = setTimeout(()=>{
 		getTitleAndDescription(tabId, (tags) => {
 			const title = (tags.title == null || tags.title.length > 0) ? tags.title : "null";
 			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
             const api_url = `${API_BASE_URL}/${API_ENDPOINT}?userGoal=${encodeURIComponent(userGoal)}&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`;
-			fetch(api_url)
+			fetch(api_url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
 			.then(response => {
 				if (!response.ok) {
 					console.error(`API call failed with status: ${response.status}\nUrl:${api_url}`);
@@ -65,6 +87,26 @@ function setSiteVisited(url, tabId, triggerType) {
 	activeTabId = tabId;
 	activeFullUrl = url
 }
+
+async function notifyBrowsingStopped(){
+    var notifyBrowsingStopped = `${API_BASE_URL}/BrowsingStopped`;
+    let token = await getIdToken();
+    fetch(notifyBrowsingStopped, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+
+    activeTabId = null;
+    activeFullUrl = null;
+}
+
+chrome.tabs.onCreated.addListener((tab) => {
+    notifyBrowsingStopped();
+});
+
 //Listen for history state updates i.e when SPA sites like youtube go from youtube.com to youtube.com/searchedItem without a full reload
 chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
 	if (details.frameId == 0 && await isTabCurrentlyActive(details.tabId, details.url)){
@@ -167,7 +209,7 @@ setTimeout(() => {
     }
 }, 3000); // Wait 3 seconds for connection to establish
 
-// Example: Listen for webNavigation events (as per your manifest)
+// Example: Listen for webNavigation events
 chrome.webNavigation.onCompleted.addListener((details) => {
     if (details.frameId === 0) { // Main frame
         console.log("Navigated to:", details.url);
