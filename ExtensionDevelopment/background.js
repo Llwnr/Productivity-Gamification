@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5160/SiteMonitor";
+const API_BASE_URL = "https://localhost:7131/SiteMonitor";
 const API_ENDPOINT = "AnalyzeSite";
 
 const userGoal = "Game Developer";
@@ -38,7 +38,7 @@ function getTitleAndDescription(tabId, callback) {
 }
 
 async function getIdToken(){
-    return await chrome.storage.local.get(['authToken']).authToken;
+    return (await chrome.storage.local.get(['authToken'])).authToken;
 }
 
 var siteAnalysisDebouncer = 99999999; 
@@ -63,6 +63,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
     siteAnalysisDebouncer = setTimeout(()=>{
 		getTitleAndDescription(tabId, (tags) => {
+			console.log(token);
 			const title = (tags.title == null || tags.title.length > 0) ? tags.title : "null";
 			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
             const api_url = `${API_BASE_URL}/${API_ENDPOINT}?userGoal=${encodeURIComponent(userGoal)}&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`;
@@ -79,7 +80,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 				}
 			})
 			.catch(error => {
-				console.error(`Error fetching SiteBrowsed API: ${error}`);
+				console.error(`Error fetching ${api_url} API: ${error}`);
 			});
 		})
 		},1000);
@@ -146,83 +147,3 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 		console.log("Error: " + ex);
 	}
 });
-
-//When browsed is closed
-//NATIVE HOST SETUP
-const NATIVE_HOST_NAME = "com.productivity_gamification.console_app"
-let port = null;
-
-function connectToNativeHost() {
-    console.log(`Attempting to connect to native host: ${NATIVE_HOST_NAME}`);
-    port = chrome.runtime.connectNative(NATIVE_HOST_NAME);
-
-    port.onMessage.addListener((message) => {
-        console.log("Received from native host:", message);
-        // Process the message from the native app
-        // e.g., update UI, store data, etc.
-        if (message && message.Text) {
-            console.log("Native host says:", message.Text);
-        }
-    });
-
-    port.onDisconnect.addListener(() => {
-        const lastError = chrome.runtime.lastError;
-        if (lastError) {
-            console.error("Native host disconnected with error:", lastError.message);
-        } else {
-            console.log("Native host disconnected.");
-        }
-        port = null; // Clear the port
-        // Optionally, try to reconnect after a delay
-        setTimeout(connectToNativeHost, 5000);
-    });
-
-    console.log("Native port connected (or connection attempt initiated).");
-}
-
-function sendMessageToNativeHost(message) {
-    if (port) {
-        console.log("Sending to native host:", message);
-        port.postMessage(message);
-    } else {
-        console.error("Cannot send message: Native port is not connected.");
-        // Optionally, try to connect first
-        // connectToNativeHost();
-        // setTimeout(() => sendMessageToNativeHost(message), 1000); // And then retry
-    }
-}
-
-// --- Example Usage ---
-
-// Connect when the extension starts (or on some event)
-connectToNativeHost();
-
-// Example: Send a message after a delay or on an event
-setTimeout(() => {
-    if (port) {
-        sendMessageToNativeHost({ Text: "Hello from Chrome Extension!" });
-    } else {
-        console.warn("Port not yet ready for initial message.");
-        // If you want to ensure it sends, you might queue this message
-        // or wait for the port to be established.
-        // For simplicity, we're just logging a warning here.
-    }
-}, 3000); // Wait 3 seconds for connection to establish
-
-// Example: Listen for webNavigation events
-chrome.webNavigation.onCompleted.addListener((details) => {
-    if (details.frameId === 0) { // Main frame
-        console.log("Navigated to:", details.url);
-        if (port) {
-            sendMessageToNativeHost({
-                EventType: "Navigation",
-                Url: details.url,
-                Timestamp: new Date().toISOString()
-            });
-        } else {
-            console.warn("Cannot send navigation event: Native port not connected.");
-        }
-    }
-});
-
-console.log("Background script loaded.");

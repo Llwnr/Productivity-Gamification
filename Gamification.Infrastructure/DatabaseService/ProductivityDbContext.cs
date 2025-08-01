@@ -23,14 +23,14 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         var entity = modelBuilder.Entity<User>();
 
         entity.HasKey(u => u.UserId);
-        entity.Property(u => u.UserId).ValueGeneratedOnAdd();
+        entity.Property(u => u.UserId).HasDefaultValueSql("gen_random_uuid()");
     }
 
     void SetupSitesTable(ModelBuilder modelBuilder){
         var entity = modelBuilder.Entity<Site>();
 
         entity.HasKey(p => p.SiteId);
-        entity.Property(s => s.SiteId).ValueGeneratedOnAdd();
+        entity.Property(s => s.SiteId).HasDefaultValueSql("gen_random_uuid()");
         entity.HasIndex(s => s.Url).IsUnique();
     }
     
@@ -38,7 +38,7 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         var entity = modelBuilder.Entity<AnalysisResult>();
         
         entity.HasKey(p => p.AnalysisId);
-        entity.Property(p => p.AnalysisId).ValueGeneratedOnAdd();
+        entity.Property(p => p.AnalysisId).HasDefaultValueSql("gen_random_uuid()");
         
         entity
             .HasOne(ar => ar.Site)
@@ -54,8 +54,8 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
     void SetupUserSiteVisitsTable(ModelBuilder modelBuilder){
         var entity = modelBuilder.Entity<UserSiteVisit>();
 
-        entity.HasKey(usv => usv.SiteVisitId);
-        entity.Property(usv => usv.SiteVisitId).ValueGeneratedOnAdd();
+        entity.HasKey(usv => usv.VisitId);
+        entity.Property(usv => usv.VisitId).HasDefaultValueSql("gen_random_uuid()");
 
         entity.HasIndex(usv => usv.VisitDate);
         entity
@@ -71,12 +71,18 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
             .HasOne(usv => usv.User)
             .WithMany(u => u.UserSiteVisits)
             .HasForeignKey(usv => usv.UserId);
+        
+        entity
+            .HasOne(usv => usv.Site)
+            .WithMany(u => u.UserSiteVisits)
+            .HasForeignKey(usv => usv.SiteId);
     }
 
     void SetupGameStatsTable(ModelBuilder modelBuilder){
         var entity = modelBuilder.Entity<GameStat>();
 
         entity.HasKey(gs => gs.StatId);
+        entity.Property(gs=>gs.StatId).HasDefaultValueSql("gen_random_uuid()");
         
         entity
             .HasOne(gs => gs.User)

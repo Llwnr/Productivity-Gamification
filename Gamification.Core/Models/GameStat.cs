@@ -1,9 +1,9 @@
 namespace Gamification.Core.Models;
 
 public class GameStat{
-    public int StatId { get; set; }
+    public string StatId { get; set; }
     
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     public User? User{ get; set; }
     
     public int Coin{ get; set; }

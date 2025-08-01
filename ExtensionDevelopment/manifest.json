@@ -7,7 +7,6 @@
     "webNavigation",
     "tabs",
     "windows",
-    "nativeMessaging",
     "scripting",
     "storage"
   ],

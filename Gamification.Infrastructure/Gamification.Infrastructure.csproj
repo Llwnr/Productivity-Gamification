@@ -28,8 +28,4 @@
       <ProjectReference Include="..\Gamification.Core\Gamification.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Models\" />
-    </ItemGroup>
-
 </Project>

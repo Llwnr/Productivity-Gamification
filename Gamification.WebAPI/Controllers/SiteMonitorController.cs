@@ -4,6 +4,7 @@ using Gamification.Core.Models;
 using Gamification.Core.Interfaces;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Gamification.WebAPI.Controllers;
 
@@ -19,6 +20,7 @@ public class SiteMonitorController : ControllerBase{
     /// <summary>
     /// Will take in the site's information & user's goals then prompt the LLM to analyze site for productivity scores.
     /// </summary>
+    [Authorize]
     [HttpGet("AnalyzeSite")]
     public async Task AnalyzeSite(string userGoal, string url, string title, string desc){
         bool success = await _siteAnalysisService.AnalyzeSite(userGoal, url, title, desc);

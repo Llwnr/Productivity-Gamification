@@ -1,12 +1,15 @@
 namespace Gamification.Core.Models;
 
 public class UserSiteVisit{
-    public int SiteVisitId{ get; set; }
+    public string VisitId{ get; set; }
     
-    public int UserId{ get; set; }
+    public string UserId{ get; set; }
     public User? User{ get; set; }
-    
-    public int AnalysisId{ get; set; }
+
+    public string SiteId{ get; set; }
+    public Site? Site{ get; set; }
+
+    public string AnalysisId{ get; set; }
     public AnalysisResult? Analysis{ get; set; }
     
     public DateTime VisitDate{ get; set; }
