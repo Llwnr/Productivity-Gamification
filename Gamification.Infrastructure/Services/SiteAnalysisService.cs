@@ -18,17 +18,6 @@ public class SiteAnalysisService : ISiteAnalysisService{
     public async Task<bool> AnalyzeSite(string userGoal, string url, string title, string desc){
         string fullPrompt = $"\nUserGoal: {userGoal}\nSiteUrl: {url}\nDescription: {desc}\nTitle:{title}.";
         Console.WriteLine("Url browsed: " + url);
-        GoogleApi test = new GoogleApi();
-        SiteAnalysis? res = await test.Generate(fullPrompt);
-        if (res != null){
-            float finalScores = _scoreCalculationService.GetFinalScore(res.IntrinsicScore, res.RelevanceScore);
-            Console.WriteLine($"Score: {finalScores}");
-            Console.WriteLine($"Visited time: {DateTime.Now}");
-
-            Console.WriteLine($"Writing to database");
-        }
-
-        return true;
         
         if (TryGetCachedAnalysis(url, userGoal, out var analysisResult)){
             Console.WriteLine($"Found {analysisResult.Site?.Url}");

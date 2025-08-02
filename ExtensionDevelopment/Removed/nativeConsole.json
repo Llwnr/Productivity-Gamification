@@ -1,7 +1,7 @@
 {
   "name": "com.productivity_gamification.console_app",
   "description": "My Application",
-  "path": "D:\\Programming\\Projects\\Productivity Gamification\\Gamification.NativeMessagingHost\\bin\\Release\\net9.0\\Gamification.NativeMessagingHost.exe",
+  "path": "D:\\Programming\\Projects\\Productivity Gamification\\Gamification.NativeMessagingHost\\bin\\Release\\net9.0\\Gamification.NativeMessagingHost.exeFALSE",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://dbfclappcleijpbnakfnhcdhmbdmibgg/"]
 }

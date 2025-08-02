@@ -27,26 +27,19 @@ public class AuthenticationController : ControllerBase{
         User? registeredUser = _dbContext.Users
             .FirstOrDefault(u => u.Username == user.Username && u.Password == user.Password);
         if (registeredUser != null){
-            var token = GenerateJwtToken(user.Username);
-            Console.WriteLine("Verified");
+            var token = GenerateJwtToken(registeredUser.UserId);
+            Console.WriteLine($"Token for {user.Username} has been generated");
             return Ok(token);
         }
         else{
-            Console.WriteLine("Not verified");
+            Console.WriteLine("Token not generated");
             return Ok("Ok");
         }
     }
 
-    [HttpGet("test_auth")]
-    [Authorize]
-    public IActionResult Test(){
-        Console.WriteLine("Its working. Currently logged user: " + User.FindFirst(ClaimTypes.NameIdentifier));
-        return Ok("Done");
-    }
-
-    private string GenerateJwtToken(string username){
+    private string GenerateJwtToken(string userId){
         var claims = new[]{
-            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         
