@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Gamification.Infrastructure.Externals;
 using Gamification.Core.Models;
@@ -12,9 +13,13 @@ namespace Gamification.WebAPI.Controllers;
 [Route("[controller]")]
 public class SiteMonitorController : ControllerBase{
     private readonly ISiteAnalysisService _siteAnalysisService;
+    private readonly IInactivityRecordingService _inactivityRecordingService;
     
-    public SiteMonitorController(ISiteAnalysisService siteAnalysisService){
+    public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    
+    public SiteMonitorController(ISiteAnalysisService siteAnalysisService, IInactivityRecordingService inactivityRecordingService){
         _siteAnalysisService = siteAnalysisService;
+        _inactivityRecordingService = inactivityRecordingService;
     }
     
     /// <summary>
@@ -28,8 +33,23 @@ public class SiteMonitorController : ControllerBase{
         else Console.WriteLine("Failed to analyze site");
     }
 
+    [Authorize]
     [HttpGet("BrowsingStopped")]
     public void NotifyBrowserClosed(){
         Console.WriteLine("User has stopped browsing.");
+        if (!string.IsNullOrWhiteSpace(UserId)){
+            _inactivityRecordingService.RecordAsInactive(UserId);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("BrowserCrashed")]
+    public void RecordLastActiveState(string lastActiveTimeStr){
+        if (!string.IsNullOrWhiteSpace(UserId)){
+            if (DateTime.TryParse(lastActiveTimeStr, out var lastActiveTime)){
+                _inactivityRecordingService.RecordAsInactive(UserId, lastActiveTime);
+            }
+            Console.Error.WriteLine("Failed to parse time.");
+        }
     }
 }

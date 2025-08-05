@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="productivity_gamification@localhost" uuid="08847e17-dda7-464f-b710-7d6f3748e703">
+    <data-source source="LOCAL" name="productivity_gamification@localhost" uuid="f1afc4c7-2b52-4053-9c21-fbdf976ce2b8">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

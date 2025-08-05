@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    [Migration("20250801114505_BasicTables")]
+    [Migration("20250804091117_BasicTables")]
     partial class BasicTables
     {
         /// <inheritdoc />

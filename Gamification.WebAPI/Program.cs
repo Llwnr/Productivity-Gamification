@@ -18,6 +18,7 @@ builder.Services.AddDbContextPool<ProductivityDbContext>(option =>
 
 builder.Services.AddScoped<IScoreCalculationService, ScoreCalculationService>();
 builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
+builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {

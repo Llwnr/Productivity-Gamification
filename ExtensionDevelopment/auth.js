@@ -12,8 +12,6 @@ loginForm.addEventListener('submit', async(e)=>{
         password: password
     }
 
-    console.log(`user=${username} pw=${password}`);
-
     await fetch(API_BASE + 'login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},

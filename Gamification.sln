@@ -14,8 +14,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamification.Infrastructure
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamification.WebAPI", "Gamification.WebAPI\Gamification.WebAPI.csproj", "{97B448DF-3B36-4B2F-8F7D-8004E4E11FAE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamification.NativeMessagingHost", "Gamification.NativeMessagingHost\Gamification.NativeMessagingHost.csproj", "{FAD23BFC-8958-4605-92F0-8565AA8B9FB8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,7 +25,6 @@ Global
 		{AF1EB913-FFC0-4B10-AE21-C29E3360AB15} = {27B89846-A96B-4096-B00C-9DD030E0C49E}
 		{721E2459-1AFF-4312-B4F4-34CA440FD2E7} = {27B89846-A96B-4096-B00C-9DD030E0C49E}
 		{97B448DF-3B36-4B2F-8F7D-8004E4E11FAE} = {27B89846-A96B-4096-B00C-9DD030E0C49E}
-		{FAD23BFC-8958-4605-92F0-8565AA8B9FB8} = {27B89846-A96B-4096-B00C-9DD030E0C49E}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7A0400A0-EC45-44A5-8BD3-00C9899527CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -46,9 +43,5 @@ Global
 		{97B448DF-3B36-4B2F-8F7D-8004E4E11FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97B448DF-3B36-4B2F-8F7D-8004E4E11FAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97B448DF-3B36-4B2F-8F7D-8004E4E11FAE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FAD23BFC-8958-4605-92F0-8565AA8B9FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FAD23BFC-8958-4605-92F0-8565AA8B9FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FAD23BFC-8958-4605-92F0-8565AA8B9FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FAD23BFC-8958-4605-92F0-8565AA8B9FB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

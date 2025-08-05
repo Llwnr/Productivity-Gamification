@@ -6,10 +6,10 @@ public class UserSiteVisit{
     public string UserId{ get; set; }
     public User? User{ get; set; }
 
-    public string SiteId{ get; set; }
+    public string? SiteId{ get; set; }
     public Site? Site{ get; set; }
 
-    public string AnalysisId{ get; set; }
+    public string? AnalysisId{ get; set; }
     public AnalysisResult? Analysis{ get; set; }
     
     public DateTime VisitDate{ get; set; }
