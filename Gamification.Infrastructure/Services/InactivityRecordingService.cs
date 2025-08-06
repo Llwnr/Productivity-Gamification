@@ -16,11 +16,17 @@ public class InactivityRecordingService : IInactivityRecordingService{
             UserId = userId,
             VisitDate = DateTime.UtcNow,
         };
+
+        _dbContext.Add(newActivity);
+        _dbContext.SaveChanges();
     }
     public void RecordAsInactive(string userId, DateTime lastActiveTime){
         UserSiteVisit newActivity = new UserSiteVisit{
             UserId = userId,
             VisitDate = lastActiveTime
         };
+        
+        _dbContext.Add(newActivity);
+        _dbContext.SaveChanges();
     }
 }

@@ -1,19 +1,18 @@
 importScripts(['chromeHelper.js'])
 
-const API_BASE_URL = "https://localhost:7131/SiteMonitor";
-const API_ENDPOINT = "AnalyzeSite";
-
 const userGoal = "Game Developer";
 
 var activeTabId = null;
 var activeFullUrl = null;
 
 chrome.runtime.onInstalled.addListener(async () => {
-	await manageUnwantedShutdown();
+	setInterval(setLatestActiveTime, 1000); //Store browser active time & update it regularly
+	await notifyLastActiveTime();
 })
 
 chrome.runtime.onStartup.addListener(async () => {
-	await manageUnwantedShutdown();
+	setInterval(setLatestActiveTime, 1000);
+	await notifyLastActiveTime();
 })
 
 chrome.tabs.onCreated.addListener((tab) => {
@@ -48,7 +47,10 @@ chrome.tabs.onActivated.addListener(async (details) => {
 
 //When user switches windows or tabs
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
-    if(windowId === chrome.windows.WINDOW_ID_NONE) return;
+    if(windowId === chrome.windows.WINDOW_ID_NONE){
+    	notifyBrowsingStopped();
+    	return;
+    }
 	try{
 		// Get the currently active tab in the newly focused window
 		const [activeTab] = await chrome.tabs.query({ active: true, windowId: windowId });
@@ -59,13 +61,3 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 		console.log("Error: " + ex);
 	}
 });
-
-chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-	if(removeInfo.isWindowClosing){
-		chrome.storage.local.set({browserClosedNormally: true})
-	}
-})
-
-chrome.windows.onRemoved.addListener(() => {
-	chrome.storage.local.set({browserClosedNormally: true})
-})

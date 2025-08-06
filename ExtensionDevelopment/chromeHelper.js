@@ -1,3 +1,6 @@
+const API_BASE_URL = "https://localhost:7131/SiteMonitor";
+const API_ENDPOINT = "AnalyzeSite";
+
 function setLatestActiveTime(){
     chrome.storage.local.set({latestActiveTime: new Date().toUTCString()});
 }
@@ -91,7 +94,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 }
 
 async function notifyBrowsingStopped(){
-    var notifyBrowsingStopped = `${API_BASE_URL}/BrowsingStopped`;
+    let notifyBrowsingStopped = `${API_BASE_URL}/BrowsingStopped`;
     let token = await getIdToken();
     fetch(notifyBrowsingStopped, {
         method: 'GET',
@@ -105,31 +108,26 @@ async function notifyBrowsingStopped(){
     activeFullUrl = null;
 }
 
-function resetBrowserState(){
-    chrome.storage.local.set({browserClosedNormally: false})
-}
-
-async function hadNormalClosure(){
-    let normalClosure = (await chrome.storage.local.get(['browserClosedNormally'])).browserClosedNormally;
-    if(normalClosure == null || normalClosure != true){
-        console.log('Normal closure state: ' + normalClosure);
-        console.log("Browser was not closed normally");
-        return false;
-    }else{
-        console.log("Browser closed normally")
-        return true;
-    }
-}
-
 //Handles browser/extension being closed due to crashes/ power down etc.
 //Basically, sends the last active browser time to the api for last activity, as on browser closure the last activity is not recorded.
-async function manageUnwantedShutdown(){
-    let normalClosure = await hadNormalClosure();
-    //If browser/extension crashed/closed in a sudden way then you still have to record the last active browser time.
-    //Otherwise, say your visit to a site A will be recorded as used for a looooong time.
-    if(!normalClosure) console.log('Previous closure time: ' + await getLatestActiveTime());
+async function notifyLastActiveTime(){
+    let lastActiveTime = await getLatestActiveTime();
+    console.log('Previous closure time: ' + lastActiveTime);
 
-    setInterval(setLatestActiveTime, 1000);
+    chrome.storage.local.set({browserClosedNormally: false});
 
-    resetBrowserState();
+    let inactivityNotifyingApi = `${API_BASE_URL}/BrowserCrashed?lastActiveTimeStr=${encodeURIComponent(lastActiveTime)}`;
+    let token = await getIdToken();
+    fetch(inactivityNotifyingApi, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    }).catch((err) => console.log("Error notifying inactivity state: " + err));
+}
+
+function isTokenExpired(token) {
+  const expiry = (JSON.parse(atob(token.split('.')[1]))).exp;
+  return (Math.floor((new Date()).getTime() / 1000)) >= expiry;
 }

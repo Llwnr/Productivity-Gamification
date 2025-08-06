@@ -15,14 +15,16 @@ public class SiteAnalysisService : ISiteAnalysisService{
         _dbContext = dbContext;
     }
     
-    public async Task<bool> AnalyzeSite(string userGoal, string url, string title, string desc){
+    public async Task<bool> AnalyzeSite(string userGoal, string url, string title, string desc, string userId){
         string fullPrompt = $"\nUserGoal: {userGoal}\nSiteUrl: {url}\nDescription: {desc}\nTitle:{title}.";
         Console.WriteLine("Url browsed: " + url);
         
-        if (TryGetCachedAnalysis(url, userGoal, out var analysisResult)){
+        if (TryGetCachedAnalysis(url, userGoal, out AnalysisResult analysisResult)){
             Console.WriteLine($"Found {analysisResult.Site?.Url}");
             UserSiteVisit siteVisit = new UserSiteVisit{
+                UserId = userId,
                 Analysis = analysisResult,
+                Site = analysisResult.Site,
                 VisitDate = DateTime.UtcNow
             };
 
@@ -59,7 +61,9 @@ public class SiteAnalysisService : ISiteAnalysisService{
                 };
 
                 UserSiteVisit siteVisit = new UserSiteVisit{
+                    UserId = userId,
                     Analysis = result,
+                    Site = site,
                     VisitDate = DateTime.UtcNow
                 };
                 
@@ -82,13 +86,17 @@ public class SiteAnalysisService : ISiteAnalysisService{
     private bool TryGetCachedAnalysis(string url, string userGoal, out AnalysisResult result){
         result = new AnalysisResult();
         Console.WriteLine("Searching for the url in storage: ");
-        AnalysisResult? cachedResult = _dbContext.AnalysisResults
+        List<AnalysisResult>? cachedResults = _dbContext.AnalysisResults
             .Include(ar => ar.Site)
-            .FirstOrDefault(ar => ar.Site.Url == url);
+            .Where(ar => ar.Site.Url == url).ToList();
+        
+        foreach (var cachedResult in cachedResults){
+            if (cachedResult.UserGoal == userGoal){
+                result = cachedResult;
+                return true;
+            }
+        }
 
-        if(cachedResult?.UserGoal != userGoal) return false;
-
-        result = cachedResult;
-        return true;
+        return false;
     }
 }
