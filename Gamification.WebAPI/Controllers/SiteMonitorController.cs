@@ -12,13 +12,13 @@ namespace Gamification.WebAPI.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class SiteMonitorController : ControllerBase{
-    private readonly ISiteAnalysisService _siteAnalysisService;
+    private readonly IAnalysisQueryManager _analysisQueryManager;
     private readonly IInactivityRecordingService _inactivityRecordingService;
     
     public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     
-    public SiteMonitorController(ISiteAnalysisService siteAnalysisService, IInactivityRecordingService inactivityRecordingService){
-        _siteAnalysisService = siteAnalysisService;
+    public SiteMonitorController(IAnalysisQueryManager analysisQueryManager, IInactivityRecordingService inactivityRecordingService){
+        _analysisQueryManager = analysisQueryManager;
         _inactivityRecordingService = inactivityRecordingService;
     }
     
@@ -27,16 +27,14 @@ public class SiteMonitorController : ControllerBase{
     /// </summary>
     [Authorize]
     [HttpGet("AnalyzeSite")]
-    public async Task AnalyzeSite(string userGoal, string url, string title, string desc){
-        bool success = await _siteAnalysisService.AnalyzeSite(userGoal, url, title, desc, UserId);
-        if(success) Console.WriteLine("Successfully analyzed site");
-        else Console.WriteLine("Failed to analyze site");
+    public void AnalyzeSite(string userGoal, string url, string title, string desc){
+        Prompt prompt = new Prompt(userGoal, url, title, desc);
+        _analysisQueryManager.EnqueueAnalysisQuery(prompt, UserId);
     }
 
     [Authorize]
     [HttpGet("BrowsingStopped")]
     public void NotifyBrowserClosed(){
-        return;
         Console.WriteLine("User has stopped browsing.");
         if (!string.IsNullOrWhiteSpace(UserId)){
             _inactivityRecordingService.RecordAsInactive(UserId);
@@ -49,8 +47,8 @@ public class SiteMonitorController : ControllerBase{
         if (!string.IsNullOrWhiteSpace(UserId)){
             if (DateTime.TryParse(lastActiveTimeStr, out var lastActiveTime)){
                 lastActiveTime = lastActiveTime.ToUniversalTime();
-                Console.WriteLine("Crashed time: " + lastActiveTime + " Curr time:" + DateTime.UtcNow);
                 _inactivityRecordingService.RecordAsInactive(UserId, lastActiveTime);
+                return;
             }
             Console.Error.WriteLine("Failed to parse time.");
         }

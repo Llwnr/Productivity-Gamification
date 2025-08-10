@@ -33,7 +33,7 @@ public class GoogleApi{
             "Your task is to perform a two-part analysis " +
             "of a website visit based on the specific page title, " +
             "the general site content, and the user's goal." +
-            "\nYou must provide:\ncategory, justification, intrinsicScore, relevanceScore. " +
+            "\nYou must provide:\ncategory, intrinsicScore, relevanceScore. " +
             "As per the descriptions in the FormatOutputStructure tool." +
             "\nUse the `FormatOutputStructure` tool to structure your response.";
         

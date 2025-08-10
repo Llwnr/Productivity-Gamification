@@ -1,5 +1,7 @@
+using Gamification.Core.Models;
+
 namespace Gamification.Core.Interfaces;
 
 public interface ISiteAnalysisService{
-    Task<bool> AnalyzeSite(string userGoal, string url, string title, string desc, string userId);
+    Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime);
 }

@@ -12,6 +12,10 @@ public class InactivityRecordingService : IInactivityRecordingService{
     }
     
     public void RecordAsInactive(string userId){
+        if (AlreadyRecordedInactive()){
+            Console.WriteLine("User is already recorded as inactive");
+            return;
+        }
         UserSiteVisit newActivity = new UserSiteVisit{
             UserId = userId,
             VisitDate = DateTime.UtcNow,
@@ -21,6 +25,10 @@ public class InactivityRecordingService : IInactivityRecordingService{
         _dbContext.SaveChanges();
     }
     public void RecordAsInactive(string userId, DateTime lastActiveTime){
+        if (AlreadyRecordedInactive()){
+            Console.WriteLine("User is already recorded as inactive");
+            return;
+        }
         UserSiteVisit newActivity = new UserSiteVisit{
             UserId = userId,
             VisitDate = lastActiveTime
@@ -28,5 +36,11 @@ public class InactivityRecordingService : IInactivityRecordingService{
         
         _dbContext.Add(newActivity);
         _dbContext.SaveChanges();
+    }
+
+    //Checks if the last recorded activity is of user's inactivity i.e. notifying user has stopped browsing or smth
+    bool AlreadyRecordedInactive(){
+        UserSiteVisit? lastActivity = _dbContext.UserSiteVisits.OrderByDescending(usv =>  usv.VisitDate).FirstOrDefault();
+        return lastActivity is {AnalysisId: null, SiteId: null};
     }
 }

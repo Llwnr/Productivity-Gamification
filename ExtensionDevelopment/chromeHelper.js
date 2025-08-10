@@ -52,6 +52,7 @@ async function setSiteVisited(url, tabId, triggerType) {
         console.log("Token is null");
         return;
     }
+    clearTimeout(siteAnalysisDebouncer); //Cancel any short lived activity
     if(!url) return;
     //Check if tab has been switched to a non browsable url i.e. browser setting pages etc
     if(triggerType == 'tabSwitched' && !(url.startsWith('http://') || url.startsWith('https://'))){
@@ -63,12 +64,12 @@ async function setSiteVisited(url, tabId, triggerType) {
 	if (!url.startsWith('http://') && !url.startsWith('https://')) return;
 	if (activeFullUrl == url && activeTabId == tabId) return; //Don't do anything if same page and same tab
 
-	clearTimeout(siteAnalysisDebouncer);
+	
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
     siteAnalysisDebouncer = setTimeout(()=>{
 		getTitleAndDescription(tabId, (tags) => {
 			console.log(token);
-			const title = (tags.title == null || tags.title.length > 0) ? tags.title : "null";
+			const title = (tags.title == null || tags.title.length > 0) ? tags.title.substring(0, 100) : "null";
 			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
             const api_url = `${API_BASE_URL}/${API_ENDPOINT}?userGoal=${encodeURIComponent(userGoal)}&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`;
 			fetch(api_url, {
@@ -87,7 +88,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 				console.error(`Error fetching ${api_url} API: ${error}`);
 			});
 		})
-		},1000);
+		},5000);
 
 	activeTabId = tabId;
 	activeFullUrl = url

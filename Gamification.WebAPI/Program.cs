@@ -3,6 +3,7 @@ using Gamification.Core.Interfaces;
 using Gamification.Core.Services;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Services;
+using Gamification.WebAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +20,12 @@ builder.Services.AddDbContextPool<ProductivityDbContext>(option =>
 builder.Services.AddScoped<IScoreCalculationService, ScoreCalculationService>();
 builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
 builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
+
+builder.Services.AddSingleton<AnalysisQueryManager>();
+builder.Services.AddSingleton<IAnalysisQueryManager>(provider => 
+    provider.GetRequiredService<AnalysisQueryManager>());
+builder.Services.AddHostedService(provider => 
+    provider.GetRequiredService<AnalysisQueryManager>());
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {

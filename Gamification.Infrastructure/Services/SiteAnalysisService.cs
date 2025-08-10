@@ -15,17 +15,17 @@ public class SiteAnalysisService : ISiteAnalysisService{
         _dbContext = dbContext;
     }
     
-    public async Task<bool> AnalyzeSite(string userGoal, string url, string title, string desc, string userId){
-        string fullPrompt = $"\nUserGoal: {userGoal}\nSiteUrl: {url}\nDescription: {desc}\nTitle:{title}.";
-        Console.WriteLine("Url browsed: " + url);
+    public async Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime){
+        string fullPrompt = prompt.ToString();
+        Console.WriteLine("Site browsed: " + prompt.Title);
         
-        if (TryGetCachedAnalysis(url, userGoal, out AnalysisResult analysisResult)){
-            Console.WriteLine($"Found {analysisResult.Site?.Url}");
+        if (TryGetCachedAnalysis(prompt.Url, prompt.UserGoal, out AnalysisResult analysisResult)){
+            Console.WriteLine($"Found in database.");
             UserSiteVisit siteVisit = new UserSiteVisit{
                 UserId = userId,
                 Analysis = analysisResult,
                 Site = analysisResult.Site,
-                VisitDate = DateTime.UtcNow
+                VisitDate = visitTime
             };
 
             _dbContext.Add(siteVisit);
@@ -40,16 +40,11 @@ public class SiteAnalysisService : ISiteAnalysisService{
             if (analysis != null){
                 float finalScore = _scoreCalculationService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
                 Console.WriteLine($"Score: {finalScore}");
-                Console.WriteLine($"Visited time: {DateTime.Now}");
-
-                Console.WriteLine($"Writing to database");
-
-                // return true;
 
                 Site site = new Site{
-                    Url = url,
-                    Title = title,
-                    Description = desc
+                    Url = prompt.Url,
+                    Title = prompt.Title,
+                    Description = prompt.Description
                 };
                 
                 AnalysisResult result = new AnalysisResult{
@@ -57,20 +52,22 @@ public class SiteAnalysisService : ISiteAnalysisService{
                     IntrinsicScore = analysis.IntrinsicScore,
                     RelevanceScore = analysis.RelevanceScore,
                     Site = site,
-                    UserGoal = userGoal
+                    UserGoal = prompt.UserGoal
                 };
 
                 UserSiteVisit siteVisit = new UserSiteVisit{
                     UserId = userId,
                     Analysis = result,
                     Site = site,
-                    VisitDate = DateTime.UtcNow
+                    VisitDate = visitTime
                 };
                 
                 _dbContext.Add(site);
                 _dbContext.Add(result);
                 _dbContext.Add(siteVisit);
                 _dbContext.SaveChanges();
+
+                Console.WriteLine($"Successfully added site {prompt.Title} to database");
 
                 return true;
             }

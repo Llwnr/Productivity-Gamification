@@ -3,9 +3,9 @@
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <IntrospectionStateNumber>772</IntrospectionStateNumber>
+      <IntrospectionStateNumber>809</IntrospectionStateNumber>
       <ServerVersion>17.5</ServerVersion>
-      <StartupTime>1754451808</StartupTime>
+      <StartupTime>1754530027</StartupTime>
       <TimeZones>true ACDT
 true ACSST
 false ACST
@@ -806,7 +806,7 @@ false Zulu
 14650||10|C|G
 14650||-9223372036854775808|U|G
 14650||10|U|G</Grants>
-      <IntrospectionStateNumber>772</IntrospectionStateNumber>
+      <IntrospectionStateNumber>809</IntrospectionStateNumber>
       <ObjectId>24576</ObjectId>
       <OwnerName>postgres</OwnerName>
     </database>
@@ -4228,8 +4228,8 @@ false Zulu
     <schema id="265" parent="3" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>772</IntrospectionStateNumber>
-      <LastIntrospectionLocalTimestamp>2025-08-06.08:55:50</LastIntrospectionLocalTimestamp>
+      <IntrospectionStateNumber>809</IntrospectionStateNumber>
+      <LastIntrospectionLocalTimestamp>2025-08-07.12:12:54</LastIntrospectionLocalTimestamp>
       <ObjectId>2200</ObjectId>
       <StateNumber>532</StateNumber>
       <OwnerName>pg_database_owner</OwnerName>
@@ -4242,7 +4242,7 @@ false Zulu
     </table>
     <table id="267" parent="265" name="analysis_results">
       <ObjectId>32789</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4254,13 +4254,13 @@ false Zulu
     </table>
     <table id="269" parent="265" name="sites">
       <ObjectId>32773</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="270" parent="265" name="user_site_visits">
       <ObjectId>32815</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4356,7 +4356,7 @@ false Zulu
       <ColNames>analysis_id</ColNames>
       <ObjectId>32795</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4367,7 +4367,7 @@ false Zulu
       <ColNames>site_id
 user_goal</ColNames>
       <ObjectId>32838</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationIds>100
@@ -4483,7 +4483,7 @@ pg_catalog</CollationParentNames>
       <ColNames>site_id</ColNames>
       <ObjectId>32779</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4493,7 +4493,7 @@ pg_catalog</CollationParentNames>
     <index id="300" parent="269" name="ix_sites_url">
       <ColNames>url</ColNames>
       <ObjectId>32840</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4572,7 +4572,7 @@ pg_catalog</CollationParentNames>
       <ColNames>visit_id</ColNames>
       <ObjectId>32821</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4582,7 +4582,7 @@ pg_catalog</CollationParentNames>
     <index id="312" parent="270" name="ix_user_site_visits_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>32844</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4591,7 +4591,7 @@ pg_catalog</CollationParentNames>
     <index id="313" parent="270" name="ix_user_site_visits_site_id">
       <ColNames>site_id</ColNames>
       <ObjectId>32843</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4600,7 +4600,7 @@ pg_catalog</CollationParentNames>
     <index id="314" parent="270" name="ix_user_site_visits_analysis_id">
       <ColNames>analysis_id</ColNames>
       <ObjectId>32841</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4609,14 +4609,14 @@ pg_catalog</CollationParentNames>
     <index id="315" parent="270" name="ix_user_site_visits_visit_date">
       <ColNames>visit_date</ColNames>
       <ObjectId>32845</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
     <index id="316" parent="270" name="ix_user_site_visits_processed_at">
       <ColNames>processed_at</ColNames>
       <Condition>(processed_at IS NULL)</Condition>
       <ObjectId>32842</ObjectId>
-      <StateNumber>771</StateNumber>
+      <StateNumber>808</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
     <key id="317" parent="270" name="pk_user_site_visits">

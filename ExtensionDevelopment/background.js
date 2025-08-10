@@ -47,8 +47,9 @@ chrome.tabs.onActivated.addListener(async (details) => {
 
 //When user switches windows or tabs
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
+	clearTimeout(siteAnalysisDebouncer);
     if(windowId === chrome.windows.WINDOW_ID_NONE){
-    	notifyBrowsingStopped();
+       	notifyBrowsingStopped();
     	return;
     }
 	try{
