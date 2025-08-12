@@ -48,10 +48,6 @@ chrome.tabs.onActivated.addListener(async (details) => {
 //When user switches windows or tabs
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
 	clearTimeout(siteAnalysisDebouncer);
-    if(windowId === chrome.windows.WINDOW_ID_NONE){
-       	notifyBrowsingStopped();
-    	return;
-    }
 	try{
 		// Get the currently active tab in the newly focused window
 		const [activeTab] = await chrome.tabs.query({ active: true, windowId: windowId });
@@ -62,3 +58,14 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 		console.log("Error: " + ex);
 	}
 });
+
+setInterval(() => {
+	chrome.windows.getLastFocused((window) => {
+		if(window && window.focused){
+			//Do nothing as browser is being focused
+		}else{
+			clearTimeout(siteAnalysisDebouncer);
+			notifyBrowsingStopped();
+		}
+	})
+},2000)

@@ -18,7 +18,6 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
 
     // Constructor: Inject dependencies
     public AnalysisQueryManager(IServiceScopeFactory scopeFactory, ILogger<AnalysisQueryManager> logger){
-        Console.WriteLine("Okkkk");
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
@@ -84,7 +83,7 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
             .Handle<Exception>() // Handle any exception. Be more specific if you know the types of transient errors.
             .WaitAndRetryAsync(
                 3, // Retry up to 3 times
-                retryAttempt => TimeSpan.FromSeconds(5 + retryAttempt), // Exponential back-off: 2s, 4s, 8s
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(3, retryAttempt)), // Exponential back-off: 2s, 4s, 8s
                 (exception, timeSpan, retryCount, context) => {
                     // Log a warning before each retry attempt
                     _logger.LogWarning(

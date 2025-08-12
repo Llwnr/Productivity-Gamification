@@ -71,13 +71,20 @@ async function setSiteVisited(url, tabId, triggerType) {
 			console.log(token);
 			const title = (tags.title == null || tags.title.length > 0) ? tags.title.substring(0, 100) : "null";
 			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
-            const api_url = `${API_BASE_URL}/${API_ENDPOINT}?userGoal=${encodeURIComponent(userGoal)}&url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&desc=${encodeURIComponent(desc)}`;
+            const requestData = {
+                userGoal: userGoal,
+                url: url,
+                title: title,
+                description: desc
+            };
+            const api_url = `${API_BASE_URL}/${API_ENDPOINT}`;
 			fetch(api_url, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                body: JSON.stringify(requestData)
             })
 			.then(response => {
 				if (!response.ok) {
@@ -131,4 +138,9 @@ async function notifyLastActiveTime(){
 function isTokenExpired(token) {
   const expiry = (JSON.parse(atob(token.split('.')[1]))).exp;
   return (Math.floor((new Date()).getTime() / 1000)) >= expiry;
+}
+
+async function sendMessage(msg){
+    let msgApi = `${API_BASE_URL}/Talk?msg=${encodeURIComponent(msg)}`;
+    fetch(msgApi)
 }

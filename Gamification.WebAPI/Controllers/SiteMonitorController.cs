@@ -26,16 +26,14 @@ public class SiteMonitorController : ControllerBase{
     /// Will take in the site's information & user's goals then prompt the LLM to analyze site for productivity scores.
     /// </summary>
     [Authorize]
-    [HttpGet("AnalyzeSite")]
-    public void AnalyzeSite(string userGoal, string url, string title, string desc){
-        Prompt prompt = new Prompt(userGoal, url, title, desc);
-        _analysisQueryManager.EnqueueAnalysisQuery(prompt, UserId);
+    [HttpPost("AnalyzeSite")]
+    public void AnalyzeSite([FromBody] Prompt siteVisitDetails){
+        _analysisQueryManager.EnqueueAnalysisQuery(siteVisitDetails, UserId);
     }
 
     [Authorize]
     [HttpGet("BrowsingStopped")]
     public void NotifyBrowserClosed(){
-        Console.WriteLine("User has stopped browsing.");
         if (!string.IsNullOrWhiteSpace(UserId)){
             _inactivityRecordingService.RecordAsInactive(UserId);
         }
@@ -54,8 +52,8 @@ public class SiteMonitorController : ControllerBase{
         }
     }
 
-    [HttpGet("TestSite")]
-    public void LogRandom(){
-        Console.WriteLine("Working");
+    [HttpGet("Talk")]
+    public void LogRandom(string msg){
+        Console.WriteLine(msg);
     }
 }
