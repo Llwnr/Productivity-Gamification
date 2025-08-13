@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    [Migration("20250804091117_BasicTables")]
-    partial class BasicTables
+    [Migration("20250813105842_BasicSchemas")]
+    partial class BasicSchemas
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -166,7 +166,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("AnalysisId")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("analysis_id");
 
@@ -175,7 +174,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasColumnName("processed_at");
 
                     b.Property<string>("SiteId")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("site_id");
 
@@ -239,15 +237,11 @@ namespace Gamification.Infrastructure.Migrations
                     b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
                         .WithMany("UserSiteVisit")
                         .HasForeignKey("AnalysisId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_user_site_visits_analysis_results_analysis_id");
 
                     b.HasOne("Gamification.Core.Models.Site", "Site")
                         .WithMany("UserSiteVisits")
                         .HasForeignKey("SiteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_user_site_visits_sites_site_id");
 
                     b.HasOne("Gamification.Core.Models.User", "User")

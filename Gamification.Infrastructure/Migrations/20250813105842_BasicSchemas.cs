@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Gamification.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class BasicTables : Migration
+    public partial class BasicSchemas : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -89,8 +89,8 @@ namespace Gamification.Infrastructure.Migrations
                 {
                     visit_id = table.Column<string>(type: "text", nullable: false, defaultValueSql: "gen_random_uuid()"),
                     user_id = table.Column<string>(type: "text", nullable: false),
-                    site_id = table.Column<string>(type: "text", nullable: false),
-                    analysis_id = table.Column<string>(type: "text", nullable: false),
+                    site_id = table.Column<string>(type: "text", nullable: true),
+                    analysis_id = table.Column<string>(type: "text", nullable: true),
                     visit_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     processed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -101,14 +101,12 @@ namespace Gamification.Infrastructure.Migrations
                         name: "fk_user_site_visits_analysis_results_analysis_id",
                         column: x => x.analysis_id,
                         principalTable: "analysis_results",
-                        principalColumn: "analysis_id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "analysis_id");
                     table.ForeignKey(
                         name: "fk_user_site_visits_sites_site_id",
                         column: x => x.site_id,
                         principalTable: "sites",
-                        principalColumn: "site_id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "site_id");
                     table.ForeignKey(
                         name: "fk_user_site_visits_users_user_id",
                         column: x => x.user_id,

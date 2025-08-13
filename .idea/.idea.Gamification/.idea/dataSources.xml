@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="productivity_gamification@localhost" uuid="f1afc4c7-2b52-4053-9c21-fbdf976ce2b8">
+    <data-source source="LOCAL" name="productivity_gamification@localhost" uuid="081155b2-af5e-4f6a-a59c-ffa4e90156b7">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
+      <configured-by-url>true</configured-by-url>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/productivity_gamification</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:5432/productivity_gamification?password=livewithme0&amp;user=postgres</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
