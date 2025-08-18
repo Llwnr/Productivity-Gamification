@@ -2,6 +2,7 @@ using Gamification.Core.Interfaces;
 using Gamification.Core.Models;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Externals;
+using Gamification.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gamification.Infrastructure.Services;
@@ -9,15 +10,22 @@ namespace Gamification.Infrastructure.Services;
 public class SiteAnalysisService : ISiteAnalysisService{
     private readonly IScoreCalculationService _scoreCalculationService;
     private readonly ProductivityDbContext _dbContext;
+    private readonly IContentAnalysisFilter _analysisFilter;
 
-    public SiteAnalysisService(IScoreCalculationService scoreCalculationService, ProductivityDbContext dbContext){
+    public SiteAnalysisService(IScoreCalculationService scoreCalculationService, ProductivityDbContext dbContext, IContentAnalysisFilter analysisFilter){
         _scoreCalculationService = scoreCalculationService;
         _dbContext = dbContext;
+        _analysisFilter = analysisFilter;
     }
     
     public async Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime){
         string fullPrompt = prompt.ToString();
         Console.WriteLine("Site browsed: " + prompt.Title);
+
+        if (!_analysisFilter.IsAnalysisRequired(prompt.Description)){
+            Console.WriteLine("Skipping analysis");
+            return false;
+        }
         
         if (TryGetCachedAnalysis(prompt.Url, prompt.UserGoal, out AnalysisResult analysisResult)){
             Console.WriteLine($"Found in database.");

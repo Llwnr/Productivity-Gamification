@@ -1,6 +1,10 @@
 const API_BASE_URL = "https://localhost:7131/SiteMonitor";
 const API_ENDPOINT = "AnalyzeSite";
 
+const delay = (durationMs) => {
+  return new Promise(resolve => setTimeout(resolve, durationMs));
+}
+
 function setLatestActiveTime(){
     chrome.storage.local.set({latestActiveTime: new Date().toUTCString()});
 }
@@ -45,6 +49,11 @@ async function getIdToken(){
     return (await chrome.storage.local.get(['authToken'])).authToken;
 }
 
+function clearActiveTabCache(){
+    activeTabId = null;
+    activeFullUrl = null;
+}
+
 var siteAnalysisDebouncer = 99999999; 
 async function setSiteVisited(url, tabId, triggerType) {
     let token = await getIdToken();
@@ -68,7 +77,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
     siteAnalysisDebouncer = setTimeout(()=>{
 		getTitleAndDescription(tabId, (tags) => {
-			console.log(token);
+			
 			const title = (tags.title == null || tags.title.length > 0) ? tags.title.substring(0, 100) : "null";
 			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
             const requestData = {
@@ -95,7 +104,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 				console.error(`Error fetching ${api_url} API: ${error}`);
 			});
 		})
-		},5000);
+		},3000);
 
 	activeTabId = tabId;
 	activeFullUrl = url
@@ -112,8 +121,7 @@ async function notifyBrowsingStopped(){
         }
     })
 
-    activeTabId = null;
-    activeFullUrl = null;
+    clearActiveTabCache();
 }
 
 //Handles browser/extension being closed due to crashes/ power down etc.

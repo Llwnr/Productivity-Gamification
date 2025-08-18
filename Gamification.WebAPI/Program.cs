@@ -2,6 +2,7 @@ using System.Text;
 using Gamification.Core.Interfaces;
 using Gamification.Core.Services;
 using Gamification.Infrastructure.DatabaseService;
+using Gamification.Infrastructure.Interfaces;
 using Gamification.Infrastructure.Services;
 using Gamification.WebAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -27,6 +28,8 @@ builder.Services.AddSingleton<IAnalysisQueryManager>(provider =>
 builder.Services.AddHostedService(provider => 
     provider.GetRequiredService<AnalysisQueryManager>());
 
+builder.Services.AddSingleton<IContentAnalysisFilter, ContentAnalysisFilter>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         options.TokenValidationParameters = new TokenValidationParameters{
@@ -47,6 +50,12 @@ builder.Services.AddOpenApi();
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope()){
+    var services = scope.ServiceProvider;
+    Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
+    services.GetRequiredService<IContentAnalysisFilter>();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()){
