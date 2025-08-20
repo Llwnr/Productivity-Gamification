@@ -11,15 +11,23 @@ public class SiteAnalysisService : ISiteAnalysisService{
     private readonly IScoreCalculationService _scoreCalculationService;
     private readonly ProductivityDbContext _dbContext;
     private readonly IContentAnalysisFilter _analysisFilter;
+    private readonly GoogleApi _googleApi;
 
-    public SiteAnalysisService(IScoreCalculationService scoreCalculationService, ProductivityDbContext dbContext, IContentAnalysisFilter analysisFilter){
+    public SiteAnalysisService(IScoreCalculationService scoreCalculationService, ProductivityDbContext dbContext, IContentAnalysisFilter analysisFilter, GoogleApi googleApi){
         _scoreCalculationService = scoreCalculationService;
         _dbContext = dbContext;
         _analysisFilter = analysisFilter;
+        _googleApi = googleApi;
     }
     
     public async Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime){
-        string fullPrompt = prompt.ToString();
+        User? user = _dbContext.Users.FirstOrDefault(u => u.UserId == userId);
+        if (user == null || string.IsNullOrEmpty(user.Goal)){
+            Console.WriteLine("USER NOT FOUND or User has not set the goal");
+            return false;
+        }
+        
+        string fullPrompt = $"User goal: {user.Goal} {prompt}";
         Console.WriteLine("Site browsed: " + prompt.Title);
 
         if (!_analysisFilter.IsAnalysisRequired(prompt.Description)){
@@ -27,7 +35,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
             return false;
         }
         
-        if (TryGetCachedAnalysis(prompt.Url, prompt.UserGoal, out AnalysisResult analysisResult)){
+        if (TryGetCachedAnalysis(prompt.Url, user.Goal, out AnalysisResult analysisResult)){
             Console.WriteLine($"Found in database.");
             UserSiteVisit siteVisit = new UserSiteVisit{
                 UserId = userId,
@@ -41,10 +49,10 @@ public class SiteAnalysisService : ISiteAnalysisService{
             
             return true;
         }
-
-        GoogleApi googleApi = new GoogleApi();
+        
         try{
-            SiteAnalysis? analysis = await googleApi.Generate(fullPrompt);
+            Console.WriteLine("Performing analysis");
+            SiteAnalysis? analysis = await _googleApi.Generate(fullPrompt);
             if (analysis != null){
                 float finalScore = _scoreCalculationService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
                 Console.WriteLine($"Score: {finalScore}");
@@ -60,7 +68,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
                     IntrinsicScore = analysis.IntrinsicScore,
                     RelevanceScore = analysis.RelevanceScore,
                     Site = site,
-                    UserGoal = prompt.UserGoal
+                    UserGoal = user.Goal
                 };
 
                 UserSiteVisit siteVisit = new UserSiteVisit{
@@ -88,7 +96,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
     }
 
     //Checks whether the site is already analyzed, if yes uses that analysis for scoring instead of querying LLM again.
-    private bool TryGetCachedAnalysis(string url, string userGoal, out AnalysisResult result){
+    private bool TryGetCachedAnalysis(string url, string? userGoal, out AnalysisResult result){
         result = new AnalysisResult();
         Console.WriteLine("Searching for the url in storage: ");
         List<AnalysisResult>? cachedResults = _dbContext.AnalysisResults

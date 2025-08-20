@@ -3,9 +3,9 @@
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <IntrospectionStateNumber>751</IntrospectionStateNumber>
+      <IntrospectionStateNumber>782</IntrospectionStateNumber>
       <ServerVersion>17.5</ServerVersion>
-      <StartupTime>1755081105</StartupTime>
+      <StartupTime>1755489757</StartupTime>
       <TimeZones>true ACDT
 true ACSST
 false ACST
@@ -806,7 +806,7 @@ false Zulu
 14650||10|C|G
 14650||-9223372036854775808|U|G
 14650||10|U|G</Grants>
-      <IntrospectionStateNumber>751</IntrospectionStateNumber>
+      <IntrospectionStateNumber>782</IntrospectionStateNumber>
       <ObjectId>16387</ObjectId>
       <OwnerName>postgres</OwnerName>
     </database>
@@ -4228,8 +4228,8 @@ false Zulu
     <schema id="265" parent="3" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>751</IntrospectionStateNumber>
-      <LastIntrospectionLocalTimestamp>2025-08-13.11:00:00</LastIntrospectionLocalTimestamp>
+      <IntrospectionStateNumber>782</IntrospectionStateNumber>
+      <LastIntrospectionLocalTimestamp>2025-08-19.05:20:29</LastIntrospectionLocalTimestamp>
       <ObjectId>2200</ObjectId>
       <StateNumber>532</StateNumber>
       <OwnerName>pg_database_owner</OwnerName>
@@ -4242,31 +4242,31 @@ false Zulu
     </table>
     <table id="267" parent="265" name="analysis_results">
       <ObjectId>16409</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="268" parent="265" name="game_stats">
       <ObjectId>16422</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>777</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="269" parent="265" name="sites">
       <ObjectId>16393</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="270" parent="265" name="user_site_visits">
       <ObjectId>16435</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="271" parent="265" name="users">
       <ObjectId>16401</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>777</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4356,7 +4356,7 @@ false Zulu
       <ColNames>analysis_id</ColNames>
       <ObjectId>16415</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4367,7 +4367,7 @@ false Zulu
       <ColNames>site_id
 user_goal</ColNames>
       <ObjectId>16458</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationIds>100
@@ -4431,7 +4431,7 @@ pg_catalog</CollationParentNames>
       <ColNames>stat_id</ColNames>
       <ObjectId>16428</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>750</StateNumber>
+      <StateNumber>777</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4441,7 +4441,7 @@ pg_catalog</CollationParentNames>
     <index id="293" parent="268" name="ix_game_stats_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16459</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>777</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4483,7 +4483,7 @@ pg_catalog</CollationParentNames>
       <ColNames>site_id</ColNames>
       <ObjectId>16399</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4493,7 +4493,7 @@ pg_catalog</CollationParentNames>
     <index id="300" parent="269" name="ix_sites_url">
       <ColNames>url</ColNames>
       <ObjectId>16460</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4572,7 +4572,7 @@ pg_catalog</CollationParentNames>
       <ColNames>visit_id</ColNames>
       <ObjectId>16441</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4582,7 +4582,7 @@ pg_catalog</CollationParentNames>
     <index id="312" parent="270" name="ix_user_site_visits_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16464</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4591,7 +4591,7 @@ pg_catalog</CollationParentNames>
     <index id="313" parent="270" name="ix_user_site_visits_site_id">
       <ColNames>site_id</ColNames>
       <ObjectId>16463</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4600,7 +4600,7 @@ pg_catalog</CollationParentNames>
     <index id="314" parent="270" name="ix_user_site_visits_analysis_id">
       <ColNames>analysis_id</ColNames>
       <ObjectId>16461</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4609,14 +4609,14 @@ pg_catalog</CollationParentNames>
     <index id="315" parent="270" name="ix_user_site_visits_visit_date">
       <ColNames>visit_date</ColNames>
       <ObjectId>16465</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
     <index id="316" parent="270" name="ix_user_site_visits_processed_at">
       <ColNames>processed_at</ColNames>
       <Condition>(processed_at IS NULL)</Condition>
       <ObjectId>16462</ObjectId>
-      <StateNumber>750</StateNumber>
+      <StateNumber>779</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
     <key id="317" parent="270" name="pk_user_site_visits">
@@ -4655,14 +4655,34 @@ pg_catalog</CollationParentNames>
       <ColNames>user_id</ColNames>
       <ObjectId>16407</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>750</StateNumber>
+      <StateNumber>777</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="323" parent="271" name="pk_users">
+    <index id="323" parent="271" name="ix_users_username">
+      <ColNames>username</ColNames>
+      <ObjectId>16504</ObjectId>
+      <StateNumber>781</StateNumber>
+      <Unique>1</Unique>
+      <AccessMethodId>403</AccessMethodId>
+      <CollationNames>default</CollationNames>
+      <CollationIds>100</CollationIds>
+      <CollationParentNames>pg_catalog</CollationParentNames>
+    </index>
+    <index id="324" parent="271" name="ix_users_email">
+      <ColNames>email</ColNames>
+      <ObjectId>16503</ObjectId>
+      <StateNumber>781</StateNumber>
+      <Unique>1</Unique>
+      <AccessMethodId>403</AccessMethodId>
+      <CollationNames>default</CollationNames>
+      <CollationIds>100</CollationIds>
+      <CollationParentNames>pg_catalog</CollationParentNames>
+    </index>
+    <key id="325" parent="271" name="pk_users">
       <ObjectId>16408</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>

@@ -13,7 +13,7 @@ public class InactivityRecordingService : IInactivityRecordingService{
     
     public void RecordAsInactive(string userId){
         if (AlreadyRecordedInactive()){
-            Console.WriteLine("User is already recorded as inactive");
+            // Console.WriteLine("User is already recorded as inactive");
             return;
         }
         UserSiteVisit newActivity = new UserSiteVisit{
@@ -26,7 +26,7 @@ public class InactivityRecordingService : IInactivityRecordingService{
     }
     public void RecordAsInactive(string userId, DateTime lastActiveTime){
         if (AlreadyRecordedInactive()){
-            Console.WriteLine("User is already recorded as inactive");
+            // Console.WriteLine("User is already recorded as inactive");
             return;
         }
         UserSiteVisit newActivity = new UserSiteVisit{

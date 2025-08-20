@@ -28,6 +28,7 @@ public class SiteMonitorController : ControllerBase{
     [Authorize]
     [HttpPost("AnalyzeSite")]
     public void AnalyzeSite([FromBody] Prompt siteVisitDetails){
+        Console.WriteLine("Received request to analyze site.");
         _analysisQueryManager.EnqueueAnalysisQuery(siteVisitDetails, UserId);
     }
 

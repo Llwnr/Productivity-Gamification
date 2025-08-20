@@ -27,8 +27,13 @@
       "js": ["content.js"]
     }
   ],
-   "action":{
-     "default_popup": "login.html"
-   }
-
+  "action": {
+    "default_popup": "login.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["Dashboard/dashboard.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

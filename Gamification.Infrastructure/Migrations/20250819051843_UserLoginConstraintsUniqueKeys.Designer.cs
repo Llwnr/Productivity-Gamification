@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Gamification.Infrastructure.DatabaseService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    partial class ProductivityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250819051843_UserLoginConstraintsUniqueKeys")]
+    partial class UserLoginConstraintsUniqueKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -139,10 +142,6 @@ namespace Gamification.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("text")
                         .HasColumnName("email");
-
-                    b.Property<string>("Goal")
-                        .HasColumnType("text")
-                        .HasColumnName("goal");
 
                     b.Property<string>("Password")
                         .HasColumnType("text")

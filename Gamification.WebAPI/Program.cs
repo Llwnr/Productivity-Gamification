@@ -2,6 +2,7 @@ using System.Text;
 using Gamification.Core.Interfaces;
 using Gamification.Core.Services;
 using Gamification.Infrastructure.DatabaseService;
+using Gamification.Infrastructure.Externals;
 using Gamification.Infrastructure.Interfaces;
 using Gamification.Infrastructure.Services;
 using Gamification.WebAPI.Services;
@@ -17,6 +18,8 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddDbContextPool<ProductivityDbContext>(option =>
     option.UseNpgsql(builder.Configuration.GetConnectionString("ProductivityDb"))
         .UseSnakeCaseNamingConvention());
+
+builder.Services.AddScoped<GoogleApi>();
 
 builder.Services.AddScoped<IScoreCalculationService, ScoreCalculationService>();
 builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
@@ -51,11 +54,11 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope()){
-    var services = scope.ServiceProvider;
-    Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
-    services.GetRequiredService<IContentAnalysisFilter>();
-}
+// using (var scope = app.Services.CreateScope()){
+//     var services = scope.ServiceProvider;
+//     Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
+//     services.GetRequiredService<IContentAnalysisFilter>();
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()){

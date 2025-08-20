@@ -24,6 +24,9 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
 
         entity.HasKey(u => u.UserId);
         entity.Property(u => u.UserId).HasDefaultValueSql("gen_random_uuid()");
+
+        entity.HasIndex(u => u.Username).IsUnique();
+        entity.HasIndex(u => u.Email).IsUnique();
     }
 
     void SetupSitesTable(ModelBuilder modelBuilder){

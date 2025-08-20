@@ -16,6 +16,7 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
     private static extern IntPtr LoadLibrary(string libname);
 
     public ContentAnalysisFilter(IConfiguration config){
+        return;
         _config = config;
         // Set configuration before initializing
         Runtime.PythonDLL = Path.Join(_config.GetValue<string>("PythonPath:Home"), "Python311.dll");
@@ -60,6 +61,7 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
 
     //Will run the pre-trained BERT model that returns 0 meaning don't need to analyze, 1 meaning analyze the content
     int RunInference(string content){
+        return 1;
         using (Py.GIL()){
             try{
                 var result = _classifier.predict(content);

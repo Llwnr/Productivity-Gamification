@@ -77,15 +77,14 @@ async function setSiteVisited(url, tabId, triggerType) {
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
     siteAnalysisDebouncer = setTimeout(()=>{
 		getTitleAndDescription(tabId, (tags) => {
-			
 			const title = (tags.title == null || tags.title.length > 0) ? tags.title.substring(0, 100) : "null";
-			const desc = (tags.description == null || tags.description.length) > 0 ? tags.description : "null";
+			const desc = tags.description || "";
             const requestData = {
-                userGoal: userGoal,
                 url: url,
                 title: title,
                 description: desc
             };
+            sendMessage("Calling for analysis of: " + title);
             const api_url = `${API_BASE_URL}/${API_ENDPOINT}`;
 			fetch(api_url, {
                 method: 'POST',

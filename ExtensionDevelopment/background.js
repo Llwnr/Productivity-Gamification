@@ -1,7 +1,5 @@
 importScripts(['chromeHelper.js'])
 
-const userGoal = "Game Developer";
-
 var activeTabId = null;
 var activeFullUrl = null;
 
@@ -47,7 +45,7 @@ chrome.tabs.onActivated.addListener(async (details) => {
 
 //When user switches windows or tabs
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
-	clearTimeout(siteAnalysisDebouncer);
+	// clearTimeout(siteAnalysisDebouncer);
 	try{
 		// Get the currently active tab in the newly focused window
 		const [activeTab] = await chrome.tabs.query({ active: true, windowId: windowId });
