@@ -5,6 +5,7 @@ using Gamification.Core.Models;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.WebAPI.Models;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
@@ -21,6 +22,12 @@ public class AuthenticationController : ControllerBase{
         _config = configuration;
         _dbContext = dbContext;
     }
+
+    [Authorize]
+    [HttpGet("CheckAuthorizeStatus")]
+    public IActionResult CheckAuthorizeStatus(){
+        return Ok(new{ message = "You're authorized" });
+    }
     
     [HttpPost("Login")]
     public IActionResult Login([FromBody] UserLogin user){
@@ -29,10 +36,40 @@ public class AuthenticationController : ControllerBase{
         if (registeredUser != null && BCrypt.Net.BCrypt.Verify(user.Password, registeredUser.Password)){
             var token = GenerateJwtToken(registeredUser.UserId);
             Console.WriteLine($"Token for {user.Username} has been generated");
-            return Ok(token);
+            
+            Response.Cookies.Append(
+                "authToken",
+                token,
+                new CookieOptions{
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
+                    IsEssential = true
+                });
+            
+            return Ok(new {message = "Login Successful!"});
         }
         Console.WriteLine("Token not generated");
-        return NotFound();
+        return Unauthorized(new {message = "Invalid credentials"});
+    }
+    
+    [Authorize]
+    [HttpPost("Logout")]
+    public IActionResult Logout(){
+        Response.Cookies.Append(
+            "authToken",
+            "",
+            new CookieOptions{
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(-1),
+                IsEssential = true
+            });
+
+        Console.WriteLine("Logged out!");
+        return Ok(new{ message = "Logged out successfully!" });
     }
 
     [HttpPost("Register")]
@@ -73,7 +110,7 @@ public class AuthenticationController : ControllerBase{
             issuer: "https://localhost:7131",
             audience: "https://localhost:7131",
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(30),
+            expires: DateTime.UtcNow.AddDays(30),
             signingCredentials: creds);
         
         return new JwtSecurityTokenHandler().WriteToken(token);

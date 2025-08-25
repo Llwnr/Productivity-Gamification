@@ -8,13 +8,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Gamification.Infrastructure.Services;
 
 public class SiteAnalysisService : ISiteAnalysisService{
-    private readonly IScoreCalculationService _scoreCalculationService;
+    private readonly IScoreProcessingService _scoreProcessingService;
     private readonly ProductivityDbContext _dbContext;
     private readonly IContentAnalysisFilter _analysisFilter;
     private readonly GoogleApi _googleApi;
 
-    public SiteAnalysisService(IScoreCalculationService scoreCalculationService, ProductivityDbContext dbContext, IContentAnalysisFilter analysisFilter, GoogleApi googleApi){
-        _scoreCalculationService = scoreCalculationService;
+    public SiteAnalysisService(IScoreProcessingService scoreProcessingService, ProductivityDbContext dbContext, IContentAnalysisFilter analysisFilter, GoogleApi googleApi){
+        _scoreProcessingService = scoreProcessingService;
         _dbContext = dbContext;
         _analysisFilter = analysisFilter;
         _googleApi = googleApi;
@@ -54,8 +54,8 @@ public class SiteAnalysisService : ISiteAnalysisService{
             Console.WriteLine("Performing analysis");
             SiteAnalysis? analysis = await _googleApi.Generate(fullPrompt);
             if (analysis != null){
-                float finalScore = _scoreCalculationService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
-                Console.WriteLine($"Score: {finalScore}");
+                // float finalScore = _scoreProcessingService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
+                // Console.WriteLine($"Score: {finalScore}");
 
                 Site site = new Site{
                     Url = prompt.Url,

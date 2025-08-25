@@ -2,14 +2,18 @@ const API_BASE = 'https://localhost:7131/Authentication/'
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 
-document.addEventListener('DOMContentLoaded', () => {
-    chrome.storage.local.get(['authToken'], (result) => {
-        console.log('Token found:');
-        if (result.authToken) {
-            chrome.tabs.create({ url: chrome.runtime.getURL('Dashboard/dashboard.html') });
-            window.close();
-        }
-    });
+document.addEventListener('DOMContentLoaded', async () => {
+    const res = await fetch(API_BASE + 'CheckAuthorizeStatus', {
+        method: 'GET',
+        credentials: 'include'
+    })
+    if(res.ok){
+        chrome.tabs.create({ url: chrome.runtime.getURL('Dashboard/dashboard.html') });
+        window.close(); // Close the popup if it's a popup  
+    }
+     else if (res.status === 401 || res.status === 403) {
+        console.log('User is not authenticated (401/403). Redirecting to login.');
+    }
 });
 
 loginForm.addEventListener('submit', async(e)=>{
@@ -26,18 +30,18 @@ loginForm.addEventListener('submit', async(e)=>{
     await fetch(API_BASE + 'Login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
         body: JSON.stringify(userLoginInfo)
     })
-        .then(res => res.text().then(async token => {
-            if(token == null) {
-                console.error("Token is null. Wrong login credentials");
-                return;
-            }
-            chrome.storage.local.set({authToken: token}, () => {
+        .then(res => {
+            if (res.ok) {
+                console.log(res.text());
                 chrome.tabs.create({ url: chrome.runtime.getURL('Dashboard/dashboard.html') });
-                window.close();
-            });
-        }))
+                window.close(); // Close the popup if it's a popup  
+            } else {
+                console.error("Login failed");
+            }
+        })
         .catch(err => {console.log("Error while logging in: " + err)})
     
 });

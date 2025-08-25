@@ -3,9 +3,17 @@
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <IntrospectionStateNumber>782</IntrospectionStateNumber>
+      <Grants>1||-9223372036854775808|c|G
+1||10|c|G
+1||10|C|G
+1||10|T|G
+4||-9223372036854775808|c|G
+4||10|c|G
+4||10|C|G
+4||10|T|G</Grants>
+      <IntrospectionStateNumber>797</IntrospectionStateNumber>
       <ServerVersion>17.5</ServerVersion>
-      <StartupTime>1755489757</StartupTime>
+      <StartupTime>1755692495</StartupTime>
       <TimeZones>true ACDT
 true ACSST
 false ACST
@@ -806,7 +814,7 @@ false Zulu
 14650||10|C|G
 14650||-9223372036854775808|U|G
 14650||10|U|G</Grants>
-      <IntrospectionStateNumber>782</IntrospectionStateNumber>
+      <IntrospectionStateNumber>797</IntrospectionStateNumber>
       <ObjectId>16387</ObjectId>
       <OwnerName>postgres</OwnerName>
     </database>
@@ -4228,8 +4236,8 @@ false Zulu
     <schema id="265" parent="3" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>782</IntrospectionStateNumber>
-      <LastIntrospectionLocalTimestamp>2025-08-19.05:20:29</LastIntrospectionLocalTimestamp>
+      <IntrospectionStateNumber>797</IntrospectionStateNumber>
+      <LastIntrospectionLocalTimestamp>2025-08-21.04:30:51</LastIntrospectionLocalTimestamp>
       <ObjectId>2200</ObjectId>
       <StateNumber>532</StateNumber>
       <OwnerName>pg_database_owner</OwnerName>
@@ -4266,7 +4274,7 @@ false Zulu
     </table>
     <table id="271" parent="265" name="users">
       <ObjectId>16401</ObjectId>
-      <StateNumber>777</StateNumber>
+      <StateNumber>783</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4651,7 +4659,13 @@ pg_catalog</CollationParentNames>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <index id="322" parent="271" name="pk_users">
+    <column id="322" parent="271" name="goal">
+      <Position>5</Position>
+      <StateNumber>783</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <index id="323" parent="271" name="pk_users">
       <ColNames>user_id</ColNames>
       <ObjectId>16407</ObjectId>
       <Primary>1</Primary>
@@ -4662,7 +4676,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="323" parent="271" name="ix_users_username">
+    <index id="324" parent="271" name="ix_users_username">
       <ColNames>username</ColNames>
       <ObjectId>16504</ObjectId>
       <StateNumber>781</StateNumber>
@@ -4672,7 +4686,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="324" parent="271" name="ix_users_email">
+    <index id="325" parent="271" name="ix_users_email">
       <ColNames>email</ColNames>
       <ObjectId>16503</ObjectId>
       <StateNumber>781</StateNumber>
@@ -4682,7 +4696,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="325" parent="271" name="pk_users">
+    <key id="326" parent="271" name="pk_users">
       <ObjectId>16408</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>

@@ -45,10 +45,6 @@ function getTitleAndDescription(tabId, callback) {
   }, ([result]) => callback(result?.result));
 }
 
-async function getIdToken(){
-    return (await chrome.storage.local.get(['authToken'])).authToken;
-}
-
 function clearActiveTabCache(){
     activeTabId = null;
     activeFullUrl = null;
@@ -56,11 +52,6 @@ function clearActiveTabCache(){
 
 var siteAnalysisDebouncer = 99999999; 
 async function setSiteVisited(url, tabId, triggerType) {
-    let token = await getIdToken();
-    if(token == null){
-        console.log("Token is null");
-        return;
-    }
     clearTimeout(siteAnalysisDebouncer); //Cancel any short lived activity
     if(!url) return;
     //Check if tab has been switched to a non browsable url i.e. browser setting pages etc
@@ -90,7 +81,7 @@ async function setSiteVisited(url, tabId, triggerType) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    credentials: 'include'
                 },
                 body: JSON.stringify(requestData)
             })
@@ -103,7 +94,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 				console.error(`Error fetching ${api_url} API: ${error}`);
 			});
 		})
-		},3000);
+	},3000);
 
 	activeTabId = tabId;
 	activeFullUrl = url
@@ -111,12 +102,11 @@ async function setSiteVisited(url, tabId, triggerType) {
 
 async function notifyBrowsingStopped(){
     let notifyBrowsingStopped = `${API_BASE_URL}/BrowsingStopped`;
-    let token = await getIdToken();
     fetch(notifyBrowsingStopped, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            credentials: 'include'
         }
     })
 
@@ -132,12 +122,11 @@ async function notifyLastActiveTime(){
     chrome.storage.local.set({browserClosedNormally: false});
 
     let inactivityNotifyingApi = `${API_BASE_URL}/BrowserCrashed?lastActiveTimeStr=${encodeURIComponent(lastActiveTime)}`;
-    let token = await getIdToken();
     fetch(inactivityNotifyingApi, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            credentials: 'include'
         }
     }).catch((err) => console.log("Error notifying inactivity state: " + err));
 }

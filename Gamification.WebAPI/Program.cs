@@ -1,6 +1,5 @@
 using System.Text;
 using Gamification.Core.Interfaces;
-using Gamification.Core.Services;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Externals;
 using Gamification.Infrastructure.Interfaces;
@@ -21,7 +20,7 @@ builder.Services.AddDbContextPool<ProductivityDbContext>(option =>
 
 builder.Services.AddScoped<GoogleApi>();
 
-builder.Services.AddScoped<IScoreCalculationService, ScoreCalculationService>();
+builder.Services.AddScoped<IScoreProcessingService, ScoreProcessingService>();
 builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
 builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
 
@@ -44,7 +43,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = "https://localhost:7131",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtKeys:SymmetricKey")))
         };
+        options.Events = new JwtBearerEvents{
+            OnMessageReceived = context => {
+                context.Token = context.Request.Cookies["authToken"];
+                return Task.CompletedTask;
+            }
+        };
     });
+
+builder.Services.AddCors(options => {
+    options.AddPolicy("ExtensionPolicy", builder => {
+        builder.WithOrigins("chrome-extension://caigbhogbomcfecinondmiddlbgjmgce")
+            .AllowAnyHeader()
+            .AllowAnyMethod() // GET, POST, etc.
+            .AllowCredentials(); // ESSENTIAL: Allows the browser to send HttpOnly cookies cross-origin
+    });
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -64,12 +78,19 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment()){
     app.MapOpenApi();
 }
-
 app.UseHttpsRedirection();
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope()){
+    var services = scope.ServiceProvider;
+    Console.WriteLine("Loading score processing service...");
+    services.GetRequiredService<IScoreProcessingService>();
+}
+
 app.Run();
+
