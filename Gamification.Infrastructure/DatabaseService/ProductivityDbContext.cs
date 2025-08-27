@@ -60,7 +60,7 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         entity.HasKey(usv => usv.VisitId);
         entity.Property(usv => usv.VisitId).HasDefaultValueSql("gen_random_uuid()");
 
-        entity.HasIndex(usv => usv.VisitDate);
+        entity.HasIndex(usv => usv.VisitStartDate);
         entity
             .HasIndex(usv => usv.ProcessedAt)
             .HasFilter("\"processed_at\" IS NULL");
@@ -91,6 +91,11 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
             .HasOne(gs => gs.User)
             .WithMany(u => u.GameStats)
             .HasForeignKey(gs => gs.UserId);
+    }
+
+    public AnalysisResult? GetAnalysisOfSite(string siteId, string userId){
+        string userGoal = Users.FirstOrDefault(u => u.UserId == userId).Goal;
+        return AnalysisResults.FirstOrDefault(s => s.SiteId == siteId && s.UserGoal == userGoal);
     }
 }
 

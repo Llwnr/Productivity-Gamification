@@ -12,6 +12,8 @@ public class UserSiteVisit{
     public string? AnalysisId{ get; set; }
     public AnalysisResult? Analysis{ get; set; }
     
-    public DateTime VisitDate{ get; set; }
+    public DateTime VisitStartDate{ get; set; }
+    public DateTime? VisitEndDate{ get; set; }
+    
     public DateTime? ProcessedAt{ get; set; } //Determines at what time the score was calculated to award points to the user.
 }

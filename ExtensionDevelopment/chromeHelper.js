@@ -53,6 +53,7 @@ function clearActiveTabCache(){
 var siteAnalysisDebouncer = 99999999; 
 async function setSiteVisited(url, tabId, triggerType) {
     clearTimeout(siteAnalysisDebouncer); //Cancel any short lived activity
+    notifyVisitChange();
     if(!url) return;
     //Check if tab has been switched to a non browsable url i.e. browser setting pages etc
     if(triggerType == 'tabSwitched' && !(url.startsWith('http://') || url.startsWith('https://'))){
@@ -67,37 +68,50 @@ async function setSiteVisited(url, tabId, triggerType) {
 	
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
     siteAnalysisDebouncer = setTimeout(()=>{
-		getTitleAndDescription(tabId, (tags) => {
-			const title = (tags.title == null || tags.title.length > 0) ? tags.title.substring(0, 100) : "null";
-			const desc = tags.description || "";
-            const requestData = {
-                url: url,
-                title: title,
-                description: desc
-            };
-            sendMessage("Calling for analysis of: " + title);
-            const api_url = `${API_BASE_URL}/${API_ENDPOINT}`;
-			fetch(api_url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    credentials: 'include'
-                },
-                body: JSON.stringify(requestData)
-            })
-			.then(response => {
-				if (!response.ok) {
-					console.error(`API call failed with status: ${response.status}\nUrl:${api_url}`);
-				}
-			})
-			.catch(error => {
-				console.error(`Error fetching ${api_url} API: ${error}`);
-			});
-		})
-	},3000);
+		getTitleAndDescription(tabId, (tags) => sendSiteData(url, tags),2000);
+    })
 
 	activeTabId = tabId;
 	activeFullUrl = url
+}
+
+function sendSiteData(url, tags){
+    url = url.split('#')[0];
+    const title = (tags.title == null || tags.title.length > 0) ? tags.title.substring(0, 100) : "null";
+    const desc = tags.description || "";
+    const requestData = {
+        url: url,
+        title: title,
+        description: desc
+    };
+    sendMessage("Calling for analysis of: " + title);
+    const api_url = `${API_BASE_URL}/${API_ENDPOINT}`;
+    fetch(api_url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            credentials: 'include'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            console.error(`API call failed with status: ${response.status}\nUrl:${api_url}`);
+        }
+    })
+    .catch(error => {
+        console.error(`Error fetching ${api_url} API: ${error}`);
+    });
+}
+
+function notifyVisitChange(){
+    fetch(`${API_BASE_URL}/ChangeVisit`,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            credentials: 'include'
+        }
+    });
 }
 
 async function notifyBrowsingStopped(){

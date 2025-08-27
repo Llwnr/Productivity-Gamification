@@ -12,12 +12,19 @@ public class SiteAnalysisService : ISiteAnalysisService{
     private readonly ProductivityDbContext _dbContext;
     private readonly IContentAnalysisFilter _analysisFilter;
     private readonly GoogleApi _googleApi;
+    private readonly IInactivityRecordingService _inactivityRecordingService;
 
-    public SiteAnalysisService(IScoreProcessingService scoreProcessingService, ProductivityDbContext dbContext, IContentAnalysisFilter analysisFilter, GoogleApi googleApi){
+    public SiteAnalysisService(
+        IScoreProcessingService scoreProcessingService, 
+        ProductivityDbContext dbContext, 
+        IContentAnalysisFilter analysisFilter, 
+        GoogleApi googleApi,
+        IInactivityRecordingService inactivityRecordingService){
         _scoreProcessingService = scoreProcessingService;
         _dbContext = dbContext;
         _analysisFilter = analysisFilter;
         _googleApi = googleApi;
+        _inactivityRecordingService = inactivityRecordingService;
     }
     
     public async Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime){
@@ -37,15 +44,18 @@ public class SiteAnalysisService : ISiteAnalysisService{
         
         if (TryGetCachedAnalysis(prompt.Url, user.Goal, out AnalysisResult analysisResult)){
             Console.WriteLine($"Found in database.");
+            _inactivityRecordingService.EndVisit(userId, visitTime);
+            
             UserSiteVisit siteVisit = new UserSiteVisit{
                 UserId = userId,
                 Analysis = analysisResult,
                 Site = analysisResult.Site,
-                VisitDate = visitTime
+                VisitStartDate = visitTime
             };
 
             _dbContext.Add(siteVisit);
             _dbContext.SaveChanges();
+            
             
             return true;
         }
@@ -54,6 +64,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
             Console.WriteLine("Performing analysis");
             SiteAnalysis? analysis = await _googleApi.Generate(fullPrompt);
             if (analysis != null){
+                _inactivityRecordingService.EndVisit(userId, visitTime);
                 // float finalScore = _scoreProcessingService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
                 // Console.WriteLine($"Score: {finalScore}");
 
@@ -75,7 +86,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
                     UserId = userId,
                     Analysis = result,
                     Site = site,
-                    VisitDate = visitTime
+                    VisitStartDate = visitTime
                 };
                 
                 _dbContext.Add(site);

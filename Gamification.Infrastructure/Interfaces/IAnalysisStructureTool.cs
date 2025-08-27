@@ -14,7 +14,7 @@ public interface IAnalysisStructureTool{
         [Description("The actual, productive value of the site on its own. Range is 0-100")]
         int intrinsicScore,
         
-        [Description("The relevance of the site to the user's goals")]
+        [Description("The relevance of the site to the user's goals. Range is 0.0-1.0")]
         float relevanceScore
     );
 }

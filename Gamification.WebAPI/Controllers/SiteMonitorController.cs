@@ -53,6 +53,12 @@ public class SiteMonitorController : ControllerBase{
         }
     }
 
+    [Authorize]
+    [HttpPost("ChangeVisit")]
+    public void OnVisitChanged(){
+        _inactivityRecordingService.EndVisit(UserId);
+    }
+
     [HttpGet("Talk")]
     public void LogRandom(string msg){
         Console.WriteLine(msg);
