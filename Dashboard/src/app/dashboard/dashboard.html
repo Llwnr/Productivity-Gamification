@@ -1,1 +1,44 @@
-<p>dashboard works!</p>
+<!-- Main container for the dashboard -->
+<div class="dashboard-container">
+	<h1>My Dashboard</h1>
+
+	<!-- Section 1: User Game Statistics -->
+	<section class="stats-section">
+		<h2>User Stats</h2>
+		<!-- This container will only show up when the userStat object has been loaded from the API -->
+		<div *ngIf="stat$ | async as stat" class="stats-grid">
+			<div class="stat-card">
+				<span class="stat-label">Level: </span>
+				<span class="stat-value">{{ stat.level }}</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-label">Experience Points: </span>
+				<span class="stat-value">{{ stat.experiencePoints }} XP</span>
+			</div>
+			<div class="stat-card">
+				<span class="stat-label">Coins: </span>
+				<span class="stat-value">{{ stat.coin }} 🪙</span>
+			</div>
+		</div>
+
+		@if(siteVisits$ | async; as siteVisits){
+			<div>
+				Site data:
+				@for (siteVisit of siteVisits; track $index) {
+				<div>
+					Url: {{siteVisit.siteUrl}}
+					<br />
+					Time spent: {{ siteVisit.timeSpent}}
+					<br />
+					Score: {{ siteVisit.baseProductiveScore }}
+				</div>
+				}
+			</div>
+		}
+
+		<!-- Template to show while stats are loading -->
+		<ng-template #loadingStats>
+			<p>Loading user stats...</p>
+		</ng-template>
+	</section>
+</div>

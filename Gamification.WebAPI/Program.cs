@@ -53,7 +53,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddCors(options => {
     options.AddPolicy("ExtensionPolicy", builder => {
-        builder.WithOrigins("chrome-extension://caigbhogbomcfecinondmiddlbgjmgce")
+        builder.WithOrigins("chrome-extension://caigbhogbomcfecinondmiddlbgjmgce","http://localhost:4200")
             .AllowAnyHeader()
             .AllowAnyMethod() // GET, POST, etc.
             .AllowCredentials(); // ESSENTIAL: Allows the browser to send HttpOnly cookies cross-origin
@@ -80,7 +80,10 @@ if (app.Environment.IsDevelopment()){
 }
 app.UseHttpsRedirection();
 
-app.UseCors();
+app.UseRouting();
+
+app.UseCors("ExtensionPolicy");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

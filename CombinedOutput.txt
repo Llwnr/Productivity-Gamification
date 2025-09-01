@@ -1,0 +1,3130 @@
+﻿                            using (var scope = _scopeFactory.CreateScope()){
+        using (Py.GIL()){
+using (var scope = app.Services.CreateScope()){
+using BCrypt.Net;
+using CSharpToJsonSchema;
+using DotNetEnv;
+using Gamification.Core.Interfaces;
+using Gamification.Core.Models;
+using Gamification.Infrastructure.DatabaseService;
+using Gamification.Infrastructure.Externals;
+using Gamification.Infrastructure.Interfaces;
+using Gamification.Infrastructure.Services;
+using Gamification.WebAPI.Models;
+using Gamification.WebAPI.Services;
+using GenerativeAI;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Polly.Retry;
+using Polly;
+using Python.Runtime;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Channels;
+using System;
+
+// --- End of Using Statements ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\IAnalysisQueryManager.cs ---
+
+
+namespace Gamification.Core.Interfaces;
+
+public interface IAnalysisQueryManager{
+    public Task EnqueueAnalysisQuery(Prompt prompt, string userId);
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\IAnalysisQueryManager.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\IInactivityRecordingService.cs ---
+
+namespace Gamification.Core.Interfaces;
+
+/// <summary>
+/// Manages when the user is inactive/ has stopped browsing a site.
+/// It properly records data about the user, i.e. when the user has stopped browsing.
+/// </summary>
+public interface IInactivityRecordingService{
+    public void EndVisit(string userId, DateTime? endDate = null);
+    public void RecordAsInactive(string userId);
+    public void RecordAsInactive(string userId, DateTime lastActiveTime);
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\IInactivityRecordingService.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\IScoreProcessingService.cs ---
+
+namespace Gamification.Core.Interfaces;
+
+public interface IScoreProcessingService{
+    public int ProcessScore(string userId); //Processes the user's scores, then returns num. of rows/records processed
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\IScoreProcessingService.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\ISiteAnalysisService.cs ---
+
+
+namespace Gamification.Core.Interfaces;
+
+public interface ISiteAnalysisService{
+    Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime);
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Interfaces\ISiteAnalysisService.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\AnalysisResult.cs ---
+
+namespace Gamification.Core.Models;
+
+
+public class AnalysisResult{
+    public string AnalysisId{ get; set; }
+    public string SiteId{ get; set; }
+    public Site? Site{ get; set; } //Foreign key navigation property
+
+    public string UserGoal{ get; set; }
+    
+    public List<string> Category{ get; set; }
+    public int IntrinsicScore{ get; set; }
+    public float RelevanceScore{ get; set; }
+    
+    public ICollection<UserSiteVisit>? UserSiteVisit{ get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\AnalysisResult.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\GameStat.cs ---
+
+namespace Gamification.Core.Models;
+
+public class GameStat{
+    public string StatId { get; set; }
+    
+    public string UserId { get; set; }
+    public User? User{ get; set; }
+    
+    public int Coin{ get; set; }
+    public float ExperiencePoints{ get; set; }
+    public int Level{ get; set; }
+    // public int Streak{ get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\GameStat.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\Prompt.cs ---
+
+namespace Gamification.Core.Models;
+
+public record Prompt(string Url, string Title, string? Description){
+    public override string ToString(){
+        return $"\nUrl: {Url}\nTitle: {Title}\nDescription: {Description}";
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\Prompt.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\Site.cs ---
+
+
+namespace Gamification.Core.Models;
+
+public class Site{
+    public string SiteId { get; set; }
+    public string? Url { get; set; }
+    public string? Title{ get; set; }
+    public string? Description{ get; set; }
+    
+    public ICollection<AnalysisResult>? AnalysisResults { get; set; }
+    public ICollection<UserSiteVisit>? UserSiteVisits { get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\Site.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\SiteAnalysis.cs ---
+
+namespace Gamification.Core.Models;
+/// <summary>
+/// Class that guides the LLM to provide output in this format. NOT FOR DATABASE models.
+/// </summary>
+public class SiteAnalysis{
+    public List<string> Category { get; set; }
+    // public string Justification{ get; set; }
+    public int IntrinsicScore { get; set; }
+    public float RelevanceScore { get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\SiteAnalysis.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\User.cs ---
+
+namespace Gamification.Core.Models;
+
+public class User{
+    public string UserId{ get; set; }
+    
+    public string? Username{ get; set; }
+    public string? Email{ get; set; }
+    public string? Password{ get; set; } //Hashed password btw, not text
+    
+    public string? Goal{ get; set; }
+    
+    public ICollection<UserSiteVisit>? UserSiteVisits{ get; set; }
+    public ICollection<GameStat>?  GameStats{ get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\User.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\UserRegister.cs ---
+
+namespace Gamification.Core.Models;
+
+public class UserRegister{
+    public required string Username{ get; set; }
+    public required string Password{ get; set; }
+    public required string Email{ get; set; }
+    public required string Goal{ get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\UserRegister.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\UserSiteVisit.cs ---
+
+namespace Gamification.Core.Models;
+
+public class UserSiteVisit{
+    public string VisitId{ get; set; }
+    
+    public string UserId{ get; set; }
+    public User? User{ get; set; }
+
+    public string? SiteId{ get; set; }
+    public Site? Site{ get; set; }
+
+    public string? AnalysisId{ get; set; }
+    public AnalysisResult? Analysis{ get; set; }
+    
+    public DateTime VisitStartDate{ get; set; }
+    public DateTime? VisitEndDate{ get; set; }
+    
+    public DateTime? ProcessedAt{ get; set; } //Determines at what time the score was calculated to award points to the user.
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\Models\UserSiteVisit.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs ---
+
+// <autogenerated />
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v9.0", FrameworkDisplayName = ".NET 9.0")]
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\obj\Debug\net9.0\Gamification.Core.AssemblyInfo.cs ---
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("Gamification.Core")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80af4e1cec061fdcd0d02fe38ca6ed0f18a47039")]
+[assembly: System.Reflection.AssemblyProductAttribute("Gamification.Core")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Gamification.Core")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\obj\Debug\net9.0\Gamification.Core.AssemblyInfo.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\obj\Debug\net9.0\Gamification.Core.GlobalUsings.g.cs ---
+
+// <auto-generated/>
+global using global::System;
+global using global::System.Collections.Generic;
+global using global::System.IO;
+global using global::System.Linq;
+global using global::System.Net.Http;
+global using global::System.Threading;
+global using global::System.Threading.Tasks;
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Core\obj\Debug\net9.0\Gamification.Core.GlobalUsings.g.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\DatabaseService\ProductivityDbContext.cs ---
+
+
+namespace Gamification.Infrastructure.DatabaseService;
+
+public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> options) : DbContext(options){
+    public DbSet<Site> Sites{ get; set; }
+    public DbSet<AnalysisResult> AnalysisResults{ get; set; }
+    public DbSet<UserSiteVisit> UserSiteVisits{ get; set; }
+    public DbSet<User> Users{ get; set; }
+    public DbSet<GameStat> GameStats{ get; set; }
+
+    //Defines the schema constraints, namings etc
+    protected override void OnModelCreating(ModelBuilder modelBuilder){
+        SetupUsersTable(modelBuilder);
+        SetupSitesTable(modelBuilder);
+        SetupAnalysisResultsTable(modelBuilder);
+        SetupUserSiteVisitsTable(modelBuilder);
+        SetupGameStatsTable(modelBuilder);
+    }
+
+    void SetupUsersTable(ModelBuilder modelBuilder){
+        var entity = modelBuilder.Entity<User>();
+
+        entity.HasKey(u => u.UserId);
+        entity.Property(u => u.UserId).HasDefaultValueSql("gen_random_uuid()");
+
+        entity.HasIndex(u => u.Username).IsUnique();
+        entity.HasIndex(u => u.Email).IsUnique();
+    }
+
+    void SetupSitesTable(ModelBuilder modelBuilder){
+        var entity = modelBuilder.Entity<Site>();
+
+        entity.HasKey(p => p.SiteId);
+        entity.Property(s => s.SiteId).HasDefaultValueSql("gen_random_uuid()");
+        entity.HasIndex(s => s.Url).IsUnique();
+    }
+    
+    void SetupAnalysisResultsTable(ModelBuilder modelBuilder){
+        var entity = modelBuilder.Entity<AnalysisResult>();
+        
+        entity.HasKey(p => p.AnalysisId);
+        entity.Property(p => p.AnalysisId).HasDefaultValueSql("gen_random_uuid()");
+        
+        entity
+            .HasOne(ar => ar.Site)
+            .WithMany(s => s.AnalysisResults)
+            .HasForeignKey(ar => ar.SiteId)
+            .IsRequired();
+        
+        //There can only be 1 analysis for a site with the same goal.
+        //However, same site can have multiple analysis results based on different goals
+        entity.HasIndex(a => new {a.SiteId, a.UserGoal}).IsUnique();
+    }
+
+    void SetupUserSiteVisitsTable(ModelBuilder modelBuilder){
+        var entity = modelBuilder.Entity<UserSiteVisit>();
+
+        entity.HasKey(usv => usv.VisitId);
+        entity.Property(usv => usv.VisitId).HasDefaultValueSql("gen_random_uuid()");
+
+        entity.HasIndex(usv => usv.VisitStartDate);
+        entity
+            .HasIndex(usv => usv.ProcessedAt)
+            .HasFilter("\"processed_at\" IS NULL");
+        
+        entity
+            .HasOne(usv => usv.Analysis)
+            .WithMany(a => a.UserSiteVisit)
+            .HasForeignKey(usv => usv.AnalysisId);
+        
+        entity
+            .HasOne(usv => usv.User)
+            .WithMany(u => u.UserSiteVisits)
+            .HasForeignKey(usv => usv.UserId);
+        
+        entity
+            .HasOne(usv => usv.Site)
+            .WithMany(u => u.UserSiteVisits)
+            .HasForeignKey(usv => usv.SiteId);
+    }
+
+    void SetupGameStatsTable(ModelBuilder modelBuilder){
+        var entity = modelBuilder.Entity<GameStat>();
+
+        entity.HasKey(gs => gs.StatId);
+        entity.Property(gs=>gs.StatId).HasDefaultValueSql("gen_random_uuid()");
+        
+        entity
+            .HasOne(gs => gs.User)
+            .WithMany(u => u.GameStats)
+            .HasForeignKey(gs => gs.UserId);
+    }
+
+    public AnalysisResult? GetAnalysisOfSite(string siteId, string userId){
+        string userGoal = Users.FirstOrDefault(u => u.UserId == userId).Goal;
+        return AnalysisResults.FirstOrDefault(s => s.SiteId == siteId && s.UserGoal == userGoal);
+    }
+}
+
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\DatabaseService\ProductivityDbContext.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Externals\AnalysisStructureTool.cs ---
+
+
+namespace Gamification.Infrastructure.Externals;
+
+public class AnalysisStructureTool : IAnalysisStructureTool{
+    public SiteAnalysis FormatOutputStructure(List<string> category, int intrinsicScore, float relevanceScore){
+        return new SiteAnalysis{
+            Category = category,
+            IntrinsicScore = intrinsicScore,
+            RelevanceScore = relevanceScore
+        };
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Externals\AnalysisStructureTool.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Externals\GoogleApi.cs ---
+
+
+namespace Gamification.Infrastructure.Externals;
+
+public class GoogleApi{
+    private readonly GoogleAi? _googleAi;
+
+    public GoogleApi(){
+        Env.Load();
+        string apiKey = Env.GetString("GEMINI_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            Console.WriteLine("Please set the google api key environment variable.");
+            return;
+        }
+        
+        _googleAi = new GoogleAi(apiKey);
+    }
+
+    public async Task<SiteAnalysis?> Generate(string prompt){
+        if (_googleAi == null){
+            Console.WriteLine("Google AI Api is not set up");
+            return null;
+        }
+        
+        var model = _googleAi.CreateGenerativeModel(GoogleAIModels.Gemini2Flash);
+        model.SystemInstruction =
+            "You are an expert web analyst. " +
+            "Your task is to perform a two-part analysis " +
+            "of a website visit based on the specific page title, " +
+            "the general site content, and the user's goal." +
+            "\nYou must provide:\ncategory, intrinsicScore, relevanceScore. " +
+            "As per the descriptions in the FormatOutputStructure tool." +
+            "\nUse the `FormatOutputStructure` tool to structure your response.";
+        
+        AnalysisStructureTool analysisStructureTool = new AnalysisStructureTool();
+        
+        model.AddFunctionTool(analysisStructureTool.AsGoogleFunctionTool());
+        
+        var analysisResult = await model.GenerateObjectAsync<SiteAnalysis>(prompt);
+
+        return analysisResult;
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Externals\GoogleApi.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Interfaces\IAnalysisStructureTool.cs ---
+
+
+namespace Gamification.Infrastructure.Interfaces;
+
+[GenerateJsonSchema(GoogleFunctionTool = true)] 
+public interface IAnalysisStructureTool{
+    [Description("Analyze a site")]
+    public SiteAnalysis FormatOutputStructure(
+        [Description("The category the site lies in")]
+        List<string> category,
+        
+        [Description("The actual, productive value of the site on its own. Range is 0-100")]
+        int intrinsicScore,
+        
+        [Description("The relevance of the site to the user's goals. Range is 0.0-1.0")]
+        float relevanceScore
+    );
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Interfaces\IAnalysisStructureTool.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Interfaces\IContentAnalysisFilter.cs ---
+
+namespace Gamification.Infrastructure.Interfaces;
+
+public interface IContentAnalysisFilter{
+    bool IsAnalysisRequired(string content);
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Interfaces\IContentAnalysisFilter.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250813105842_BasicSchemas.cs ---
+
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class BasicSchemas : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "sites",
+                columns: table => new
+                {
+                    site_id = table.Column<string>(type: "text", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    url = table.Column<string>(type: "text", nullable: true),
+                    title = table.Column<string>(type: "text", nullable: true),
+                    description = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_sites", x => x.site_id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "users",
+                columns: table => new
+                {
+                    user_id = table.Column<string>(type: "text", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    username = table.Column<string>(type: "text", nullable: true),
+                    email = table.Column<string>(type: "text", nullable: true),
+                    password = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_users", x => x.user_id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "analysis_results",
+                columns: table => new
+                {
+                    analysis_id = table.Column<string>(type: "text", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    site_id = table.Column<string>(type: "text", nullable: false),
+                    user_goal = table.Column<string>(type: "text", nullable: false),
+                    category = table.Column<List<string>>(type: "text[]", nullable: false),
+                    intrinsic_score = table.Column<int>(type: "integer", nullable: false),
+                    relevance_score = table.Column<float>(type: "real", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_analysis_results", x => x.analysis_id);
+                    table.ForeignKey(
+                        name: "fk_analysis_results_sites_site_id",
+                        column: x => x.site_id,
+                        principalTable: "sites",
+                        principalColumn: "site_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "game_stats",
+                columns: table => new
+                {
+                    stat_id = table.Column<string>(type: "text", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    user_id = table.Column<string>(type: "text", nullable: false),
+                    coin = table.Column<int>(type: "integer", nullable: false),
+                    experience_points = table.Column<float>(type: "real", nullable: false),
+                    level = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_game_stats", x => x.stat_id);
+                    table.ForeignKey(
+                        name: "fk_game_stats_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "user_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "user_site_visits",
+                columns: table => new
+                {
+                    visit_id = table.Column<string>(type: "text", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    user_id = table.Column<string>(type: "text", nullable: false),
+                    site_id = table.Column<string>(type: "text", nullable: true),
+                    analysis_id = table.Column<string>(type: "text", nullable: true),
+                    visit_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    processed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_user_site_visits", x => x.visit_id);
+                    table.ForeignKey(
+                        name: "fk_user_site_visits_analysis_results_analysis_id",
+                        column: x => x.analysis_id,
+                        principalTable: "analysis_results",
+                        principalColumn: "analysis_id");
+                    table.ForeignKey(
+                        name: "fk_user_site_visits_sites_site_id",
+                        column: x => x.site_id,
+                        principalTable: "sites",
+                        principalColumn: "site_id");
+                    table.ForeignKey(
+                        name: "fk_user_site_visits_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "user_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_analysis_results_site_id_user_goal",
+                table: "analysis_results",
+                columns: new[] { "site_id", "user_goal" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_game_stats_user_id",
+                table: "game_stats",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_sites_url",
+                table: "sites",
+                column: "url",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_site_visits_analysis_id",
+                table: "user_site_visits",
+                column: "analysis_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_site_visits_processed_at",
+                table: "user_site_visits",
+                column: "processed_at",
+                filter: "\"processed_at\" IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_site_visits_site_id",
+                table: "user_site_visits",
+                column: "site_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_site_visits_user_id",
+                table: "user_site_visits",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_user_site_visits_visit_date",
+                table: "user_site_visits",
+                column: "visit_date");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "game_stats");
+
+            migrationBuilder.DropTable(
+                name: "user_site_visits");
+
+            migrationBuilder.DropTable(
+                name: "analysis_results");
+
+            migrationBuilder.DropTable(
+                name: "users");
+
+            migrationBuilder.DropTable(
+                name: "sites");
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250813105842_BasicSchemas.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250813105842_BasicSchemas.Designer.cs ---
+
+// <auto-generated />
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    [DbContext(typeof(ProductivityDbContext))]
+    [Migration("20250813105842_BasicSchemas")]
+    partial class BasicSchemas
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Property<string>("AnalysisId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.PrimitiveCollection<List<string>>("Category")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("category");
+
+                    b.Property<int>("IntrinsicScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("intrinsic_score");
+
+                    b.Property<float>("RelevanceScore")
+                        .HasColumnType("real")
+                        .HasColumnName("relevance_score");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserGoal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_goal");
+
+                    b.HasKey("AnalysisId")
+                        .HasName("pk_analysis_results");
+
+                    b.HasIndex("SiteId", "UserGoal")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analysis_results_site_id_user_goal");
+
+                    b.ToTable("analysis_results", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.Property<string>("StatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("stat_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Coin")
+                        .HasColumnType("integer")
+                        .HasColumnName("coin");
+
+                    b.Property<float>("ExperiencePoints")
+                        .HasColumnType("real")
+                        .HasColumnName("experience_points");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("StatId")
+                        .HasName("pk_game_stats");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_game_stats_user_id");
+
+                    b.ToTable("game_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Property<string>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("SiteId")
+                        .HasName("pk_sites");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sites_url");
+
+                    b.ToTable("sites", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Property<string>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("text")
+                        .HasColumnName("password");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_users");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.Property<string>("VisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("visit_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AnalysisId")
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("SiteId")
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_date");
+
+                    b.HasKey("VisitId")
+                        .HasName("pk_user_site_visits");
+
+                    b.HasIndex("AnalysisId")
+                        .HasDatabaseName("ix_user_site_visits_analysis_id");
+
+                    b.HasIndex("ProcessedAt")
+                        .HasDatabaseName("ix_user_site_visits_processed_at")
+                        .HasFilter("\"processed_at\" IS NULL");
+
+                    b.HasIndex("SiteId")
+                        .HasDatabaseName("ix_user_site_visits_site_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_site_visits_user_id");
+
+                    b.HasIndex("VisitDate")
+                        .HasDatabaseName("ix_user_site_visits_visit_date");
+
+                    b.ToTable("user_site_visits", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("AnalysisResults")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_analysis_results_sites_site_id");
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("GameStats")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_stats_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
+                        .WithMany("UserSiteVisit")
+                        .HasForeignKey("AnalysisId")
+                        .HasConstraintName("fk_user_site_visits_analysis_results_analysis_id");
+
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("SiteId")
+                        .HasConstraintName("fk_user_site_visits_sites_site_id");
+
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_site_visits_users_user_id");
+
+                    b.Navigation("Analysis");
+
+                    b.Navigation("Site");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Navigation("UserSiteVisit");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Navigation("AnalysisResults");
+
+                    b.Navigation("UserSiteVisits");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Navigation("GameStats");
+
+                    b.Navigation("UserSiteVisits");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250813105842_BasicSchemas.Designer.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819051843_UserLoginConstraintsUniqueKeys.cs ---
+
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class UserLoginConstraintsUniqueKeys : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateIndex(
+                name: "ix_users_email",
+                table: "users",
+                column: "email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_users_username",
+                table: "users",
+                column: "username",
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropIndex(
+                name: "ix_users_email",
+                table: "users");
+
+            migrationBuilder.DropIndex(
+                name: "ix_users_username",
+                table: "users");
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819051843_UserLoginConstraintsUniqueKeys.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819051843_UserLoginConstraintsUniqueKeys.Designer.cs ---
+
+// <auto-generated />
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    [DbContext(typeof(ProductivityDbContext))]
+    [Migration("20250819051843_UserLoginConstraintsUniqueKeys")]
+    partial class UserLoginConstraintsUniqueKeys
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Property<string>("AnalysisId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.PrimitiveCollection<List<string>>("Category")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("category");
+
+                    b.Property<int>("IntrinsicScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("intrinsic_score");
+
+                    b.Property<float>("RelevanceScore")
+                        .HasColumnType("real")
+                        .HasColumnName("relevance_score");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserGoal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_goal");
+
+                    b.HasKey("AnalysisId")
+                        .HasName("pk_analysis_results");
+
+                    b.HasIndex("SiteId", "UserGoal")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analysis_results_site_id_user_goal");
+
+                    b.ToTable("analysis_results", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.Property<string>("StatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("stat_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Coin")
+                        .HasColumnType("integer")
+                        .HasColumnName("coin");
+
+                    b.Property<float>("ExperiencePoints")
+                        .HasColumnType("real")
+                        .HasColumnName("experience_points");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("StatId")
+                        .HasName("pk_game_stats");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_game_stats_user_id");
+
+                    b.ToTable("game_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Property<string>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("SiteId")
+                        .HasName("pk_sites");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sites_url");
+
+                    b.ToTable("sites", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Property<string>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("text")
+                        .HasColumnName("password");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_users");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_email");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_username");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.Property<string>("VisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("visit_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AnalysisId")
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("SiteId")
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_date");
+
+                    b.HasKey("VisitId")
+                        .HasName("pk_user_site_visits");
+
+                    b.HasIndex("AnalysisId")
+                        .HasDatabaseName("ix_user_site_visits_analysis_id");
+
+                    b.HasIndex("ProcessedAt")
+                        .HasDatabaseName("ix_user_site_visits_processed_at")
+                        .HasFilter("\"processed_at\" IS NULL");
+
+                    b.HasIndex("SiteId")
+                        .HasDatabaseName("ix_user_site_visits_site_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_site_visits_user_id");
+
+                    b.HasIndex("VisitDate")
+                        .HasDatabaseName("ix_user_site_visits_visit_date");
+
+                    b.ToTable("user_site_visits", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("AnalysisResults")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_analysis_results_sites_site_id");
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("GameStats")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_stats_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
+                        .WithMany("UserSiteVisit")
+                        .HasForeignKey("AnalysisId")
+                        .HasConstraintName("fk_user_site_visits_analysis_results_analysis_id");
+
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("SiteId")
+                        .HasConstraintName("fk_user_site_visits_sites_site_id");
+
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_site_visits_users_user_id");
+
+                    b.Navigation("Analysis");
+
+                    b.Navigation("Site");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Navigation("UserSiteVisit");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Navigation("AnalysisResults");
+
+                    b.Navigation("UserSiteVisits");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Navigation("GameStats");
+
+                    b.Navigation("UserSiteVisits");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819051843_UserLoginConstraintsUniqueKeys.Designer.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819161318_DyanmicGoal.cs ---
+
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class DyanmicGoal : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<string>(
+                name: "goal",
+                table: "users",
+                type: "text",
+                nullable: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "goal",
+                table: "users");
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819161318_DyanmicGoal.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819161318_DyanmicGoal.Designer.cs ---
+
+// <auto-generated />
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    [DbContext(typeof(ProductivityDbContext))]
+    [Migration("20250819161318_DyanmicGoal")]
+    partial class DyanmicGoal
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Property<string>("AnalysisId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.PrimitiveCollection<List<string>>("Category")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("category");
+
+                    b.Property<int>("IntrinsicScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("intrinsic_score");
+
+                    b.Property<float>("RelevanceScore")
+                        .HasColumnType("real")
+                        .HasColumnName("relevance_score");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserGoal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_goal");
+
+                    b.HasKey("AnalysisId")
+                        .HasName("pk_analysis_results");
+
+                    b.HasIndex("SiteId", "UserGoal")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analysis_results_site_id_user_goal");
+
+                    b.ToTable("analysis_results", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.Property<string>("StatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("stat_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Coin")
+                        .HasColumnType("integer")
+                        .HasColumnName("coin");
+
+                    b.Property<float>("ExperiencePoints")
+                        .HasColumnType("real")
+                        .HasColumnName("experience_points");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("StatId")
+                        .HasName("pk_game_stats");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_game_stats_user_id");
+
+                    b.ToTable("game_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Property<string>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("SiteId")
+                        .HasName("pk_sites");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sites_url");
+
+                    b.ToTable("sites", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Property<string>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("text")
+                        .HasColumnName("password");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_users");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_email");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_username");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.Property<string>("VisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("visit_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AnalysisId")
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("SiteId")
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_date");
+
+                    b.HasKey("VisitId")
+                        .HasName("pk_user_site_visits");
+
+                    b.HasIndex("AnalysisId")
+                        .HasDatabaseName("ix_user_site_visits_analysis_id");
+
+                    b.HasIndex("ProcessedAt")
+                        .HasDatabaseName("ix_user_site_visits_processed_at")
+                        .HasFilter("\"processed_at\" IS NULL");
+
+                    b.HasIndex("SiteId")
+                        .HasDatabaseName("ix_user_site_visits_site_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_site_visits_user_id");
+
+                    b.HasIndex("VisitDate")
+                        .HasDatabaseName("ix_user_site_visits_visit_date");
+
+                    b.ToTable("user_site_visits", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("AnalysisResults")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_analysis_results_sites_site_id");
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("GameStats")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_stats_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
+                        .WithMany("UserSiteVisit")
+                        .HasForeignKey("AnalysisId")
+                        .HasConstraintName("fk_user_site_visits_analysis_results_analysis_id");
+
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("SiteId")
+                        .HasConstraintName("fk_user_site_visits_sites_site_id");
+
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_site_visits_users_user_id");
+
+                    b.Navigation("Analysis");
+
+                    b.Navigation("Site");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Navigation("UserSiteVisit");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Navigation("AnalysisResults");
+
+                    b.Navigation("UserSiteVisits");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Navigation("GameStats");
+
+                    b.Navigation("UserSiteVisits");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250819161318_DyanmicGoal.Designer.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250826014441_AddedVisitEndDate.cs ---
+
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddedVisitEndDate : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.RenameColumn(
+                name: "visit_date",
+                table: "user_site_visits",
+                newName: "visit_start_date");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_user_site_visits_visit_date",
+                table: "user_site_visits",
+                newName: "ix_user_site_visits_visit_start_date");
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "visit_end_date",
+                table: "user_site_visits",
+                type: "timestamp with time zone",
+                nullable: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "visit_end_date",
+                table: "user_site_visits");
+
+            migrationBuilder.RenameColumn(
+                name: "visit_start_date",
+                table: "user_site_visits",
+                newName: "visit_date");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_user_site_visits_visit_start_date",
+                table: "user_site_visits",
+                newName: "ix_user_site_visits_visit_date");
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250826014441_AddedVisitEndDate.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250826014441_AddedVisitEndDate.Designer.cs ---
+
+// <auto-generated />
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    [DbContext(typeof(ProductivityDbContext))]
+    [Migration("20250826014441_AddedVisitEndDate")]
+    partial class AddedVisitEndDate
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Property<string>("AnalysisId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.PrimitiveCollection<List<string>>("Category")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("category");
+
+                    b.Property<int>("IntrinsicScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("intrinsic_score");
+
+                    b.Property<float>("RelevanceScore")
+                        .HasColumnType("real")
+                        .HasColumnName("relevance_score");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserGoal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_goal");
+
+                    b.HasKey("AnalysisId")
+                        .HasName("pk_analysis_results");
+
+                    b.HasIndex("SiteId", "UserGoal")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analysis_results_site_id_user_goal");
+
+                    b.ToTable("analysis_results", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.Property<string>("StatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("stat_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Coin")
+                        .HasColumnType("integer")
+                        .HasColumnName("coin");
+
+                    b.Property<float>("ExperiencePoints")
+                        .HasColumnType("real")
+                        .HasColumnName("experience_points");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("StatId")
+                        .HasName("pk_game_stats");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_game_stats_user_id");
+
+                    b.ToTable("game_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Property<string>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("SiteId")
+                        .HasName("pk_sites");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sites_url");
+
+                    b.ToTable("sites", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Property<string>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("text")
+                        .HasColumnName("password");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_users");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_email");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_username");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.Property<string>("VisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("visit_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AnalysisId")
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("SiteId")
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime?>("VisitEndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_end_date");
+
+                    b.Property<DateTime>("VisitStartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_start_date");
+
+                    b.HasKey("VisitId")
+                        .HasName("pk_user_site_visits");
+
+                    b.HasIndex("AnalysisId")
+                        .HasDatabaseName("ix_user_site_visits_analysis_id");
+
+                    b.HasIndex("ProcessedAt")
+                        .HasDatabaseName("ix_user_site_visits_processed_at")
+                        .HasFilter("\"processed_at\" IS NULL");
+
+                    b.HasIndex("SiteId")
+                        .HasDatabaseName("ix_user_site_visits_site_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_site_visits_user_id");
+
+                    b.HasIndex("VisitStartDate")
+                        .HasDatabaseName("ix_user_site_visits_visit_start_date");
+
+                    b.ToTable("user_site_visits", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("AnalysisResults")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_analysis_results_sites_site_id");
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("GameStats")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_stats_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
+                        .WithMany("UserSiteVisit")
+                        .HasForeignKey("AnalysisId")
+                        .HasConstraintName("fk_user_site_visits_analysis_results_analysis_id");
+
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("SiteId")
+                        .HasConstraintName("fk_user_site_visits_sites_site_id");
+
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_site_visits_users_user_id");
+
+                    b.Navigation("Analysis");
+
+                    b.Navigation("Site");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Navigation("UserSiteVisit");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Navigation("AnalysisResults");
+
+                    b.Navigation("UserSiteVisits");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Navigation("GameStats");
+
+                    b.Navigation("UserSiteVisits");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\20250826014441_AddedVisitEndDate.Designer.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\ProductivityDbContextModelSnapshot.cs ---
+
+// <auto-generated />
+
+#nullable disable
+
+namespace Gamification.Infrastructure.Migrations
+{
+    [DbContext(typeof(ProductivityDbContext))]
+    partial class ProductivityDbContextModelSnapshot : ModelSnapshot
+    {
+        protected override void BuildModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Property<string>("AnalysisId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.PrimitiveCollection<List<string>>("Category")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("category");
+
+                    b.Property<int>("IntrinsicScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("intrinsic_score");
+
+                    b.Property<float>("RelevanceScore")
+                        .HasColumnType("real")
+                        .HasColumnName("relevance_score");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserGoal")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_goal");
+
+                    b.HasKey("AnalysisId")
+                        .HasName("pk_analysis_results");
+
+                    b.HasIndex("SiteId", "UserGoal")
+                        .IsUnique()
+                        .HasDatabaseName("ix_analysis_results_site_id_user_goal");
+
+                    b.ToTable("analysis_results", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.Property<string>("StatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("stat_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("Coin")
+                        .HasColumnType("integer")
+                        .HasColumnName("coin");
+
+                    b.Property<float>("ExperiencePoints")
+                        .HasColumnType("real")
+                        .HasColumnName("experience_points");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("StatId")
+                        .HasName("pk_game_stats");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_game_stats_user_id");
+
+                    b.ToTable("game_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Property<string>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("site_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("SiteId")
+                        .HasName("pk_sites");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sites_url");
+
+                    b.ToTable("sites", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Property<string>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Goal")
+                        .HasColumnType("text")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("text")
+                        .HasColumnName("password");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_users");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_email");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_username");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.Property<string>("VisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("visit_id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AnalysisId")
+                        .HasColumnType("text")
+                        .HasColumnName("analysis_id");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("SiteId")
+                        .HasColumnType("text")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime?>("VisitEndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_end_date");
+
+                    b.Property<DateTime>("VisitStartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("visit_start_date");
+
+                    b.HasKey("VisitId")
+                        .HasName("pk_user_site_visits");
+
+                    b.HasIndex("AnalysisId")
+                        .HasDatabaseName("ix_user_site_visits_analysis_id");
+
+                    b.HasIndex("ProcessedAt")
+                        .HasDatabaseName("ix_user_site_visits_processed_at")
+                        .HasFilter("\"processed_at\" IS NULL");
+
+                    b.HasIndex("SiteId")
+                        .HasDatabaseName("ix_user_site_visits_site_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_user_site_visits_user_id");
+
+                    b.HasIndex("VisitStartDate")
+                        .HasDatabaseName("ix_user_site_visits_visit_start_date");
+
+                    b.ToTable("user_site_visits", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("AnalysisResults")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_analysis_results_sites_site_id");
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.GameStat", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("GameStats")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_game_stats_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
+                        .WithMany("UserSiteVisit")
+                        .HasForeignKey("AnalysisId")
+                        .HasConstraintName("fk_user_site_visits_analysis_results_analysis_id");
+
+                    b.HasOne("Gamification.Core.Models.Site", "Site")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("SiteId")
+                        .HasConstraintName("fk_user_site_visits_sites_site_id");
+
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("UserSiteVisits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_site_visits_users_user_id");
+
+                    b.Navigation("Analysis");
+
+                    b.Navigation("Site");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
+                {
+                    b.Navigation("UserSiteVisit");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.Site", b =>
+                {
+                    b.Navigation("AnalysisResults");
+
+                    b.Navigation("UserSiteVisits");
+                });
+
+            modelBuilder.Entity("Gamification.Core.Models.User", b =>
+                {
+                    b.Navigation("GameStats");
+
+                    b.Navigation("UserSiteVisits");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Migrations\ProductivityDbContextModelSnapshot.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs ---
+
+// <autogenerated />
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v9.0", FrameworkDisplayName = ".NET 9.0")]
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\obj\Debug\net9.0\Gamification.Infrastructure.AssemblyInfo.cs ---
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("Gamification.Infrastructure")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80af4e1cec061fdcd0d02fe38ca6ed0f18a47039")]
+[assembly: System.Reflection.AssemblyProductAttribute("Gamification.Infrastructure")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Gamification.Infrastructure")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\obj\Debug\net9.0\Gamification.Infrastructure.AssemblyInfo.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\obj\Debug\net9.0\Gamification.Infrastructure.GlobalUsings.g.cs ---
+
+// <auto-generated/>
+global using global::System;
+global using global::System.Collections.Generic;
+global using global::System.IO;
+global using global::System.Linq;
+global using global::System.Net.Http;
+global using global::System.Threading;
+global using global::System.Threading.Tasks;
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\obj\Debug\net9.0\Gamification.Infrastructure.GlobalUsings.g.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\ContentAnalysisFilter.cs ---
+
+
+namespace Gamification.Infrastructure.Services;
+
+public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
+    
+    private readonly dynamic _classifier;
+    private readonly IConfiguration _config;
+    
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr LoadLibrary(string libname);
+
+    public ContentAnalysisFilter(IConfiguration config){
+        return;
+        _config = config;
+        // Set configuration before initializing
+        Runtime.PythonDLL = Path.Join(_config.GetValue<string>("PythonPath:Home"), "Python311.dll");
+        PythonEngine.PythonHome = _config.GetValue<string>("PythonPath:Home");
+        
+        PythonEngine.Initialize();
+
+        // The GIL is held by this thread after Initialize().
+        // We do all our initial setup now.
+            var scriptDirectory = _config.GetValue<string>("PythonPath:Script");
+            dynamic sys = Py.Import("sys");
+        
+            sys.path.append(scriptDirectory);
+
+            dynamic classifierModule = Py.Import("classifier");
+            var modelPath = Path.Join(_config.GetValue<string>("PythonPath:Script"), "models");
+        
+            Console.WriteLine("Loading ML model into memory...");
+            _classifier = classifierModule.Classifier(modelPath);
+            Console.WriteLine("ML model loaded. ContentAnalysisFilter is ready.");
+        }
+        
+
+        // Release the GIL, allowing other .NET threads to run.
+        // For a server, you do not call EndAllowThreads here.
+        // This "unlocks" the application.
+        PythonEngine.BeginAllowThreads();
+    }
+    
+    public bool IsAnalysisRequired(string content){
+        if (string.IsNullOrEmpty(content)) return true;
+        if (RunInference(content) == 0){
+            Console.WriteLine("No need to perform analysis. Content is clearly unproductive");
+            return false;
+        }
+        else{
+            Console.WriteLine("Content may be productive. Perform analysis");
+            return true;
+        }
+    }
+
+    //Will run the pre-trained BERT model that returns 0 meaning don't need to analyze, 1 meaning analyze the content
+    int RunInference(string content){
+        return 1;
+            try{
+                var result = _classifier.predict(content);
+                return result.As<int>();
+            }
+            catch (PythonException ex){
+                Console.WriteLine($"--- Python Exception during inference: {ex.Message} ---");
+                // Decide on a safe default. Returning 1 (analyze) is often safer than 0(don't analyze).
+                return 1;
+            }
+        }
+    }
+
+    public void Dispose(){
+        if (!PythonEngine.IsInitialized) return;
+            Console.WriteLine("Disposing Python resources...");
+
+            // 1. Explicitly dispose the classifier object.
+            try{
+                if (_classifier is IDisposable disposableClassifier){
+                    disposableClassifier.Dispose();
+                    Console.WriteLine("Classifier object disposed.");
+                }
+            }
+            catch (Exception ex){
+                Console.WriteLine($"Error disposing classifier object: {ex.Message}");
+            }
+
+            // 2. (Optional but Recommended) Trigger Python's garbage collector.
+            try{
+                dynamic gc = Py.Import("gc");
+                gc.collect();
+                Console.WriteLine("Python garbage collection triggered.");
+            }
+            catch (PythonException ex){
+                Console.WriteLine($"Error during Python GC: {ex.Message}");
+            }
+
+            // 3. Finally, shut down the Python engine.
+            Console.WriteLine("Shutting down Python Engine");
+            //Don't need to run PythonEngine.Shutdown() as on application exit, it will automatically be handled.
+            // PythonEngine.Shutdown();
+        }
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\ContentAnalysisFilter.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\InactivityRecordingService.cs ---
+
+
+namespace Gamification.Infrastructure.Services;
+
+public class InactivityRecordingService : IInactivityRecordingService{
+    private readonly ProductivityDbContext _dbContext;
+
+    public InactivityRecordingService(ProductivityDbContext dbContext){
+        _dbContext = dbContext;
+    }
+
+    public void EndVisit(string userId, DateTime? endDate = null){
+        UserSiteVisit? lastInsertedItem = _dbContext.UserSiteVisits
+            .Where(u => u.UserId == userId && u.VisitEndDate == null && (u.AnalysisId != null && u.SiteId != null))
+            .OrderByDescending(u => u.VisitStartDate)
+            .FirstOrDefault();
+        if (lastInsertedItem != null) lastInsertedItem.VisitEndDate = endDate ?? DateTime.UtcNow;
+        _dbContext.SaveChanges();
+    }
+    
+    public void RecordAsInactive(string userId){
+        if (AlreadyRecordedInactive()){
+            // Console.WriteLine("User is already recorded as inactive");
+            return;
+        }
+        EndVisit(userId);
+        return;
+        
+        UserSiteVisit newActivity = new UserSiteVisit{
+            UserId = userId,
+            VisitStartDate = DateTime.UtcNow,
+        };
+
+        _dbContext.Add(newActivity);
+        _dbContext.SaveChanges();
+    }
+    public void RecordAsInactive(string userId, DateTime lastActiveTime){
+        if (AlreadyRecordedInactive()){
+            // Console.WriteLine("User is already recorded as inactive");
+            return;
+        }
+        
+        EndVisit(userId, lastActiveTime);
+        return;
+        
+        UserSiteVisit newActivity = new UserSiteVisit{
+            UserId = userId,
+            VisitStartDate = lastActiveTime
+        };
+        
+        _dbContext.Add(newActivity);
+        _dbContext.SaveChanges();
+    }
+
+    //Checks if the last recorded activity is of user's inactivity i.e. notifying user has stopped browsing or smth
+    bool AlreadyRecordedInactive(){
+        UserSiteVisit? lastActivity = _dbContext.UserSiteVisits.OrderByDescending(usv =>  usv.VisitStartDate).FirstOrDefault();
+        return lastActivity is not {VisitEndDate: null};
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\InactivityRecordingService.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\ScoreProcessingService.cs ---
+
+
+namespace Gamification.Infrastructure.Services;
+/// <summary>
+/// Provides services for calculation of productivity score when analyzing sites
+/// </summary>
+public class ScoreProcessingService : IScoreProcessingService{
+
+    private readonly ProductivityDbContext _dbContext;
+    private readonly ILogger<ScoreProcessingService> _logger;
+    
+    public ScoreProcessingService(ProductivityDbContext dbContext, ILogger<ScoreProcessingService> logger){
+        _dbContext = dbContext;
+        _logger = logger;
+
+        ProcessScore("4420f420-2f98-4cac-a1ab-578c3c2d4b19");
+    }
+
+    public int ProcessScore(string userId){
+        if(!_dbContext.GameStats.Any(stats => stats.UserId == userId)) CreateNewStats(userId);
+        
+        UserSiteVisit[] siteVisits = _dbContext.UserSiteVisits
+            .Include(u => u.Site)
+            .Where(u => u.ProcessedAt == null && u.AnalysisId != null)
+            .OrderBy(u => u.VisitStartDate)
+            .ToArray();
+        for (int i = 0; i < siteVisits.Length; i++){
+            //Set as processed for all types of records
+            siteVisits[i].ProcessedAt = DateTime.UtcNow;
+            //Only record time spent on active sites, not inactivity recording dummy records.
+            if (IsInactiveRecord(siteVisits[i])) continue;
+
+            float timeSpent = (float)(siteVisits[i]?.VisitEndDate - siteVisits[i]?.VisitStartDate).Value.TotalSeconds;
+
+            GameStat userStat =  _dbContext.GameStats.Where(stats => stats.UserId == userId).First();
+            AnalysisResult? analysis = _dbContext.GetAnalysisOfSite(siteVisits[i].SiteId, userId);
+            if (analysis == null) throw new Exception();
+            
+            userStat.ExperiencePoints += timeSpent * (float)(analysis.IntrinsicScore * 0.5 * analysis.RelevanceScore);
+            
+            _logger.LogInformation(
+                "Site {site} was visisted for {duration} seconds", 
+                siteVisits[i].Site.Title,
+                timeSpent);
+        }
+        
+        _dbContext.SaveChanges();
+        return siteVisits.Length;
+        
+        bool IsInactiveRecord(UserSiteVisit siteVisit) => siteVisit.AnalysisId == null && siteVisit.SiteId == null;
+    }
+
+    //Creates a new stat table for user if its not already created
+    void CreateNewStats(string userId){
+        GameStat newStat = new GameStat{
+            UserId = userId,
+            Coin = 0,
+            ExperiencePoints = 0,
+            Level = 1
+        };
+
+        _dbContext.Add(newStat);
+        _dbContext.SaveChanges();
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\ScoreProcessingService.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\SiteAnalysisService.cs ---
+
+
+namespace Gamification.Infrastructure.Services;
+
+public class SiteAnalysisService : ISiteAnalysisService{
+    private readonly IScoreProcessingService _scoreProcessingService;
+    private readonly ProductivityDbContext _dbContext;
+    private readonly IContentAnalysisFilter _analysisFilter;
+    private readonly GoogleApi _googleApi;
+    private readonly IInactivityRecordingService _inactivityRecordingService;
+
+    public SiteAnalysisService(
+        IScoreProcessingService scoreProcessingService, 
+        ProductivityDbContext dbContext, 
+        IContentAnalysisFilter analysisFilter, 
+        GoogleApi googleApi,
+        IInactivityRecordingService inactivityRecordingService){
+        _scoreProcessingService = scoreProcessingService;
+        _dbContext = dbContext;
+        _analysisFilter = analysisFilter;
+        _googleApi = googleApi;
+        _inactivityRecordingService = inactivityRecordingService;
+    }
+    
+    public async Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime){
+        User? user = _dbContext.Users.FirstOrDefault(u => u.UserId == userId);
+        if (user == null || string.IsNullOrEmpty(user.Goal)){
+            Console.WriteLine("USER NOT FOUND or User has not set the goal");
+            return false;
+        }
+        
+        string fullPrompt = $"User goal: {user.Goal} {prompt}";
+        Console.WriteLine("Site browsed: " + prompt.Title);
+
+        if (!_analysisFilter.IsAnalysisRequired(prompt.Description)){
+            Console.WriteLine("Skipping analysis");
+            return false;
+        }
+        
+        if (TryGetCachedAnalysis(prompt.Url, user.Goal, out AnalysisResult analysisResult)){
+            Console.WriteLine($"Found in database.");
+            _inactivityRecordingService.EndVisit(userId, visitTime);
+            
+            UserSiteVisit siteVisit = new UserSiteVisit{
+                UserId = userId,
+                Analysis = analysisResult,
+                Site = analysisResult.Site,
+                VisitStartDate = visitTime
+            };
+
+            _dbContext.Add(siteVisit);
+            _dbContext.SaveChanges();
+            
+            
+            return true;
+        }
+        
+        try{
+            Console.WriteLine("Performing analysis");
+            SiteAnalysis? analysis = await _googleApi.Generate(fullPrompt);
+            if (analysis != null){
+                _inactivityRecordingService.EndVisit(userId, visitTime);
+                // float finalScore = _scoreProcessingService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
+                // Console.WriteLine($"Score: {finalScore}");
+
+                Site site = new Site{
+                    Url = prompt.Url,
+                    Title = prompt.Title,
+                    Description = prompt.Description
+                };
+                
+                AnalysisResult result = new AnalysisResult{
+                    Category = analysis.Category,
+                    IntrinsicScore = analysis.IntrinsicScore,
+                    RelevanceScore = analysis.RelevanceScore,
+                    Site = site,
+                    UserGoal = user.Goal
+                };
+
+                UserSiteVisit siteVisit = new UserSiteVisit{
+                    UserId = userId,
+                    Analysis = result,
+                    Site = site,
+                    VisitStartDate = visitTime
+                };
+                
+                _dbContext.Add(site);
+                _dbContext.Add(result);
+                _dbContext.Add(siteVisit);
+                _dbContext.SaveChanges();
+
+                Console.WriteLine($"Successfully added site {prompt.Title} to database");
+
+                return true;
+            }
+            return false;
+        }
+        catch (Exception e){
+            await Console.Error.WriteLineAsync("Exception while generating site analysis response from LLM: \n" + e);
+            throw;
+        }
+    }
+
+    //Checks whether the site is already analyzed, if yes uses that analysis for scoring instead of querying LLM again.
+    private bool TryGetCachedAnalysis(string url, string? userGoal, out AnalysisResult result){
+        result = new AnalysisResult();
+        Console.WriteLine("Searching for the url in storage: ");
+        List<AnalysisResult>? cachedResults = _dbContext.AnalysisResults
+            .Include(ar => ar.Site)
+            .Where(ar => ar.Site.Url == url).ToList();
+        
+        foreach (var cachedResult in cachedResults){
+            if (cachedResult.UserGoal == userGoal){
+                result = cachedResult;
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.Infrastructure\Services\SiteAnalysisService.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Program.cs ---
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+// Add services to the container.
+builder.Services.AddDbContextPool<ProductivityDbContext>(option =>
+    option.UseNpgsql(builder.Configuration.GetConnectionString("ProductivityDb"))
+        .UseSnakeCaseNamingConvention());
+
+builder.Services.AddScoped<GoogleApi>();
+
+builder.Services.AddScoped<IScoreProcessingService, ScoreProcessingService>();
+builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
+builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
+
+builder.Services.AddSingleton<AnalysisQueryManager>();
+builder.Services.AddSingleton<IAnalysisQueryManager>(provider => 
+    provider.GetRequiredService<AnalysisQueryManager>());
+builder.Services.AddHostedService(provider => 
+    provider.GetRequiredService<AnalysisQueryManager>());
+
+builder.Services.AddSingleton<IContentAnalysisFilter, ContentAnalysisFilter>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => {
+        options.TokenValidationParameters = new TokenValidationParameters{
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "https://localhost:7131",
+            ValidAudience = "https://localhost:7131",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtKeys:SymmetricKey")))
+        };
+        options.Events = new JwtBearerEvents{
+            OnMessageReceived = context => {
+                context.Token = context.Request.Cookies["authToken"];
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+builder.Services.AddCors(options => {
+    options.AddPolicy("ExtensionPolicy", builder => {
+        builder.WithOrigins("chrome-extension://caigbhogbomcfecinondmiddlbgjmgce")
+            .AllowAnyHeader()
+            .AllowAnyMethod() // GET, POST, etc.
+            .AllowCredentials(); // ESSENTIAL: Allows the browser to send HttpOnly cookies cross-origin
+    });
+});
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
+
+var app = builder.Build();
+
+// using (var scope = app.Services.CreateScope()){
+//     var services = scope.ServiceProvider;
+//     Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
+//     services.GetRequiredService<IContentAnalysisFilter>();
+// }
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment()){
+    app.MapOpenApi();
+}
+app.UseHttpsRedirection();
+
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+    var services = scope.ServiceProvider;
+    Console.WriteLine("Loading score processing service...");
+    services.GetRequiredService<IScoreProcessingService>();
+}
+
+app.Run();
+
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Program.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Controllers\AuthenticationController.cs ---
+
+
+namespace Gamification.WebAPI.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class AuthenticationController : ControllerBase{
+    private readonly IConfiguration _config;
+    private readonly ProductivityDbContext _dbContext;
+    
+    public AuthenticationController(IConfiguration configuration, ProductivityDbContext dbContext){
+        _config = configuration;
+        _dbContext = dbContext;
+    }
+
+    [Authorize]
+    [HttpGet("CheckAuthorizeStatus")]
+    public IActionResult CheckAuthorizeStatus(){
+        return Ok(new{ message = "You're authorized" });
+    }
+    
+    [HttpPost("Login")]
+    public IActionResult Login([FromBody] UserLogin user){
+        User? registeredUser = _dbContext.Users
+            .FirstOrDefault(u => user.Username == u.Username || user.Username == u.Email);
+        if (registeredUser != null && BCrypt.Net.BCrypt.Verify(user.Password, registeredUser.Password)){
+            var token = GenerateJwtToken(registeredUser.UserId);
+            Console.WriteLine($"Token for {user.Username} has been generated");
+            
+            Response.Cookies.Append(
+                "authToken",
+                token,
+                new CookieOptions{
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
+                    IsEssential = true
+                });
+            
+            return Ok(new {message = "Login Successful!"});
+        }
+        Console.WriteLine("Token not generated");
+        return Unauthorized(new {message = "Invalid credentials"});
+    }
+    
+    [Authorize]
+    [HttpPost("Logout")]
+    public IActionResult Logout(){
+        Response.Cookies.Append(
+            "authToken",
+            "",
+            new CookieOptions{
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddDays(-1),
+                IsEssential = true
+            });
+
+        Console.WriteLine("Logged out!");
+        return Ok(new{ message = "Logged out successfully!" });
+    }
+
+    [HttpPost("Register")]
+    public IActionResult Register([FromBody] UserRegister newUser){
+        if (DoesUserExist(newUser.Username, newUser.Email)) return Conflict(new {message = "Username/Email is already taken."});
+        User user = new User{
+            Username = newUser.Username,
+            Email = newUser.Email,
+            Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password, 12),
+            Goal = newUser.Goal
+        };
+        _dbContext.Users.Add(user);
+        _dbContext.SaveChanges();
+
+        Console.WriteLine($"User password: {newUser.Password}, saved as : {user.Password}");
+        
+        return Ok("Registered");
+        
+        bool DoesUserExist(string username, string email){
+            bool sameUsername = _dbContext.Users.Any(u => u.Username == username);
+            bool sameEmail = _dbContext.Users.Any(u => u.Email == email);
+            if (sameUsername || sameEmail) return true;
+            return false;
+        }
+    }
+
+    private string GenerateJwtToken(string userId){
+        var claims = new[]{
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+        
+        string jwtKey = _config.GetValue<string>("JwtKeys:SymmetricKey") ?? throw new ArgumentNullException("JwtKeys:SymmetricKey");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: "https://localhost:7131",
+            audience: "https://localhost:7131",
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(30),
+            signingCredentials: creds);
+        
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Controllers\AuthenticationController.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Controllers\DashboardController.cs ---
+
+
+namespace Gamification.WebAPI.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class DashboardController : ControllerBase{
+    private readonly ProductivityDbContext _dbContext;
+    
+    public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    public DashboardController(ProductivityDbContext dbContext){
+        _dbContext = dbContext;
+    }
+    
+    [HttpGet("UserStat")]
+    public IActionResult SendUserStat(){
+        return Ok(_dbContext.GameStats.Where(u => u.UserId == UserId));
+    }
+    
+    [HttpGet("Analytics")]
+    public IActionResult SendUserSiteVisits(){
+        return Ok(_dbContext.UserSiteVisits.Where(u => u.UserId == UserId));
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Controllers\DashboardController.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Controllers\SiteMonitorController.cs ---
+
+
+namespace Gamification.WebAPI.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class SiteMonitorController : ControllerBase{
+    private readonly IAnalysisQueryManager _analysisQueryManager;
+    private readonly IInactivityRecordingService _inactivityRecordingService;
+    
+    public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    
+    public SiteMonitorController(IAnalysisQueryManager analysisQueryManager, IInactivityRecordingService inactivityRecordingService){
+        _analysisQueryManager = analysisQueryManager;
+        _inactivityRecordingService = inactivityRecordingService;
+    }
+    
+    /// <summary>
+    /// Will take in the site's information & user's goals then prompt the LLM to analyze site for productivity scores.
+    /// </summary>
+    [Authorize]
+    [HttpPost("AnalyzeSite")]
+    public void AnalyzeSite([FromBody] Prompt siteVisitDetails){
+        Console.WriteLine("Received request to analyze site.");
+        _analysisQueryManager.EnqueueAnalysisQuery(siteVisitDetails, UserId);
+    }
+
+    [Authorize]
+    [HttpGet("BrowsingStopped")]
+    public void NotifyBrowserClosed(){
+        if (!string.IsNullOrWhiteSpace(UserId)){
+            _inactivityRecordingService.RecordAsInactive(UserId);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("BrowserCrashed")]
+    public void RecordLastActiveState(string lastActiveTimeStr){
+        if (!string.IsNullOrWhiteSpace(UserId)){
+            if (DateTime.TryParse(lastActiveTimeStr, out var lastActiveTime)){
+                lastActiveTime = lastActiveTime.ToUniversalTime();
+                _inactivityRecordingService.RecordAsInactive(UserId, lastActiveTime);
+                return;
+            }
+            Console.Error.WriteLine("Failed to parse time.");
+        }
+    }
+
+    [Authorize]
+    [HttpPost("ChangeVisit")]
+    public void OnVisitChanged(){
+        _inactivityRecordingService.EndVisit(UserId);
+    }
+
+    [HttpGet("Talk")]
+    public void LogRandom(string msg){
+        Console.WriteLine(msg);
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Controllers\SiteMonitorController.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Models\UserLogin.cs ---
+
+namespace Gamification.WebAPI.Models;
+
+public class UserLogin{
+    public required string Username{ get; set; }
+    public required string Password{ get; set; }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Models\UserLogin.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs ---
+
+// <autogenerated />
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v9.0", FrameworkDisplayName = ".NET 9.0")]
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\Gamification.WebAPI.AssemblyInfo.cs ---
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("Gamification.WebAPI")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80af4e1cec061fdcd0d02fe38ca6ed0f18a47039")]
+[assembly: System.Reflection.AssemblyProductAttribute("Gamification.WebAPI")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Gamification.WebAPI")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\Gamification.WebAPI.AssemblyInfo.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\Gamification.WebAPI.GlobalUsings.g.cs ---
+
+// <auto-generated/>
+global using global::Microsoft.AspNetCore.Builder;
+global using global::Microsoft.AspNetCore.Hosting;
+global using global::Microsoft.AspNetCore.Http;
+global using global::Microsoft.AspNetCore.Routing;
+global using global::Microsoft.Extensions.Configuration;
+global using global::Microsoft.Extensions.DependencyInjection;
+global using global::Microsoft.Extensions.Hosting;
+global using global::Microsoft.Extensions.Logging;
+global using global::System;
+global using global::System.Collections.Generic;
+global using global::System.IO;
+global using global::System.Linq;
+global using global::System.Net.Http;
+global using global::System.Net.Http.Json;
+global using global::System.Threading;
+global using global::System.Threading.Tasks;
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\Gamification.WebAPI.GlobalUsings.g.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\Gamification.WebAPI.MvcApplicationPartsAssemblyInfo.cs ---
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+
+[assembly: Microsoft.AspNetCore.Mvc.ApplicationParts.ApplicationPartAttribute("Microsoft.AspNetCore.OpenApi")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\obj\Debug\net9.0\Gamification.WebAPI.MvcApplicationPartsAssemblyInfo.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Services\AnalysisQueryManager.cs ---
+
+
+namespace Gamification.WebAPI.Services;
+
+public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
+{
+    // BlockingCollection is thread-safe and handles waiting for items
+    private readonly Channel<KeyValuePair<Prompt, string>> _queriesChannel =
+        Channel.CreateUnbounded<KeyValuePair<Prompt, string>>();
+
+    // Inject IServiceScopeFactory to resolve scoped services within the ExecuteAsync loop
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<AnalysisQueryManager> _logger; // Use specific logger type
+
+    // Constructor: Inject dependencies
+    public AnalysisQueryManager(IServiceScopeFactory scopeFactory, ILogger<AnalysisQueryManager> logger){
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+    }
+
+    // Public method to enqueue new analysis queries
+    public async Task EnqueueAnalysisQuery(Prompt prompt, string userId){
+        await _queriesChannel.Writer.WriteAsync(new KeyValuePair<Prompt, string>(prompt, userId));
+        _logger.LogInformation("Enqueued analysis query for prompt: {PromptKey}", prompt.Title);
+    }
+
+    // The core execution logic of the background service
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken){
+        while (!stoppingToken.IsCancellationRequested){
+            // Define the Polly retry policy once
+            AsyncRetryPolicy retryPolicy = DefineRetryPolicy();
+            try{
+                await foreach (var query in _queriesChannel.Reader.ReadAllAsync(stoppingToken)){
+                    //Record the exact time the user visited the site.
+                    DateTime visitTime =  DateTime.UtcNow;
+                    try{
+                        // Execute the analysis with the defined retry policy
+                        await retryPolicy.ExecuteAsync(async () => {
+                            _logger.LogInformation("Attempting analysis for prompt: {PromptKey}, User: {UserId}",
+                                query.Key.Title, query.Value);
+
+                            // Create a new scope for each operation to correctly handle scoped services
+                                // Resolve ISiteAnalysisService from the current scope
+                                var siteAnalysisService =
+                                    scope.ServiceProvider.GetRequiredService<ISiteAnalysisService>();
+                                await siteAnalysisService.AnalyzeSite(query.Key, query.Value, visitTime);
+                            }
+
+                            _logger.LogInformation("Successfully analyzed site for prompt: {PromptKey}",
+                                query.Key.Title);
+                        });
+                    }
+                    catch (Exception ex){
+                        // This catch block is hit if Polly's retry policy fails all attempts.
+                        // Log the final failure and potentially handle the "poison message" (e.g., move to dead-letter queue).
+                        _logger.LogError(ex,
+                            "The operation failed after all retries for prompt: {PromptKey}, User: {UserId}. Query will not be reprocessed.",
+                            query.Key.Title, query.Value);
+                    }
+                }
+            }
+            catch (OperationCanceledException){
+                // This exception is expected when the stoppingToken is cancelled (e.g., application shutdown).
+                // It allows for a graceful exit of the background service.
+                _logger.LogInformation("AnalysisQueryManager background service is stopping gracefully.");
+            }
+            catch (Exception ex){
+                // Catch any other unexpected exceptions that might occur outside the processing loop
+                _logger.LogCritical(ex, "An unhandled exception occurred in AnalysisQueryManager background service.");
+            }
+        }
+        // No need for 'return;' here. The method will naturally complete when the foreach loop exits.
+    }
+
+    // Helper method to define the Polly retry policy
+    private AsyncRetryPolicy DefineRetryPolicy(){// Changed to private as it's an internal helper
+        return Policy
+            .Handle<Exception>() // Handle any exception. Be more specific if you know the types of transient errors.
+            .WaitAndRetryAsync(
+                3, // Retry up to 3 times
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(3, retryAttempt)), // Exponential back-off: 2s, 4s, 8s
+                (exception, timeSpan, retryCount, context) => {
+                    // Log a warning before each retry attempt
+                    _logger.LogWarning(
+                        exception,
+                        "Analysis failed. Retrying attempt {RetryCount} in {TimeSpan} for current query.",
+                        retryCount,
+                        timeSpan);
+                });
+    }
+
+    // Optional: Override StopAsync for cleanup if needed (e.g., signaling _queries.CompleteAdding())
+    public override async Task StopAsync(CancellationToken cancellationToken){
+        _logger.LogInformation("AnalysisQueryManager is signaling completion to the queue.");
+        await base.StopAsync(cancellationToken);
+    }
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Services\AnalysisQueryManager.cs ---
+
+// --- Start of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Services\SiteViewedDurationService.cs ---
+
+namespace Gamification.WebAPI.Services;
+
+public class SiteViewedDurationService{
+    
+}
+
+// --- End of File: C:\Asesh\Projects\Productivity-Gamification\Gamification.WebAPI\Services\SiteViewedDurationService.cs ---
+
