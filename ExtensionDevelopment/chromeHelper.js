@@ -62,7 +62,7 @@ async function setSiteVisited(url, tabId, triggerType) {
     }
 
 	//Check if its a valid browsable url and not the browser's settings stuff
-	if (!url.startsWith('http://') && !url.startsWith('https://')) return;
+	if (!url.startsWith('http://') && !url.startsWith('https://') || url.startsWith('http://localhost')) return;
 	if (activeFullUrl == url && activeTabId == tabId) return; //Don't do anything if same page and same tab
 
 	

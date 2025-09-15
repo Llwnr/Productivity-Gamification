@@ -12,6 +12,7 @@ export interface SiteVisit{
   siteUrl: string,
   baseProductiveScore: number
   timeSpent: number,
+  mainCategory: string
 }
 
 @Injectable({

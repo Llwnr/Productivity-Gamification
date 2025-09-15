@@ -1,10 +1,40 @@
+<div class="sidebar">
+
+</div>
 <!-- Main container for the dashboard -->
 <div class="dashboard-container">
-	<h1>My Dashboard</h1>
+	<div class="chartHolder">
+		<div id="myChart"></div>
+	</div>
+
+	<!-- User basic stats section -->
+	<div class="statCards">
+		<div class="pointsCard" id="pointsCard">
+
+		</div>
+		<div class="expCard" id="expCard">
+
+		</div>
+		<div class="levelCard" id="levelCard">
+
+		</div>
+		<div class="streakCard" id="streakCard">
+
+		</div>
+	</div>
+
+	<div class="charts-grid">
+		<div id="by-category">
+			
+		</div>
+		<div id="by-top-sites">
+			
+		</div>
+	</div>
 
 	<!-- Section 1: User Game Statistics -->
 	<section class="stats-section">
-		<h2>User Stats</h2>
+		<!-- <h2>User Stats</h2> -->
 		<!-- This container will only show up when the userStat object has been loaded from the API -->
 		<div *ngIf="stat$ | async as stat" class="stats-grid">
 			<div class="stat-card">
@@ -31,6 +61,8 @@
 					Time spent: {{ siteVisit.timeSpent}}
 					<br />
 					Score: {{ siteVisit.baseProductiveScore }}
+					<br />
+					Category: {{ siteVisit.mainCategory }}
 				</div>
 				}
 			</div>

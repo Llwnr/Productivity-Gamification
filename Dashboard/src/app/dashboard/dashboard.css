@@ -1,0 +1,28 @@
+*{
+    color: white;
+}
+.sidebar{
+    width: 280px;
+    height: 100%;
+    position: absolute;
+    background-color: rgb(27, 21, 35);
+}
+.dashboard-container{
+    margin-left: 300px;
+}
+.statCards{
+    display: flex;
+}
+.statCards div{
+    border: 3px solid rgb(41,42,47);
+    border-radius: 10px;
+    height: 200px;
+    width: 200px;
+    margin: 25px;
+}
+.charts-grid{
+    display: flex;
+}
+.charts-grid div{
+    margin: 25px;
+}

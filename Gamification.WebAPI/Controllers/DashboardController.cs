@@ -43,7 +43,8 @@ public class DashboardController : ControllerBase{
                 siteVisitDtos.Add(new SiteVisitDTO{
                     SiteUrl = visit.Site.Url,
                     BaseProductiveScore = (float)(visit.Analysis.IntrinsicScore * 0.5 * visit.Analysis.RelevanceScore),
-                    TimeSpent = (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds
+                    TimeSpent = (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds,
+                    MainCategory = visit.Analysis.Category[0]
                 });
             }
         }
