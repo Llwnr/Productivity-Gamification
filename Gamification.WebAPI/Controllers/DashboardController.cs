@@ -19,12 +19,14 @@ public class DashboardController : ControllerBase{
         _dbContext = dbContext;
     }
     
+    [Authorize]
     [HttpGet("UserStat")]
     public IActionResult SendUserStat(){
         Console.WriteLine("Sent user's stats");
         return Ok(_dbContext.GameStats.Where(u => u.UserId == UserId));
     }
     
+    [Authorize]
     [HttpGet("Analytics")]
     public IActionResult SendUserSiteVisits(){
         List<UserSiteVisit> userSiteVisits = _dbContext.UserSiteVisits
@@ -44,7 +46,8 @@ public class DashboardController : ControllerBase{
                     SiteUrl = visit.Site.Url,
                     BaseProductiveScore = (float)(visit.Analysis.IntrinsicScore * 0.5 * visit.Analysis.RelevanceScore),
                     TimeSpent = (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds,
-                    MainCategory = visit.Analysis.Category[0]
+                    MainCategory = visit.Analysis.Category[0],
+                    VisitDate = visit.VisitStartDate,
                 });
             }
         }

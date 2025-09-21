@@ -3,61 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Api, GameStat, SiteVisit } from '../services/api';
 import { Observable } from 'rxjs';
 import * as Plotly from 'plotly.js-dist-min';
-
-// --- Type Definitions for Data ---
-interface PointsData {
-  title: string;
-  value: number;
-}
-
-interface ExpGaugeData {
-  title: string;
-  percentage: number;
-}
-
-interface LevelData {
-  title: string;
-  level: number;
-}
-
-interface StreakData {
-  title: string;
-  value: number;
-  trendData: number[];
-}
-
-interface Category {
-  name: string;
-  value: number;
-}
-
-interface CategoriesData {
-  title: string;
-  categories: Category[];
-}
-
-interface Site {
-  url: string;
-  timeSpent: number;
-}
-
-interface TopSitesData {
-  title: string;
-  sites: Site[];
-}
-
-interface TimeSpentData {
-  title: string;
-  dates: string[];
-  values: number[];
-}
-
-interface DailyUsageData {
-  title: string;
-  timeLabels: string[];
-  dayLabels: string[];
-  heatmapData: number[][];
-}
+import { DashboardData, PointsData, ExpGaugeData, LevelData, StreakData, CategoriesData, TopSitesData, TimeSpentData, DailyUsageData } from '../services/dashboard-data';
 
 @Component({
   standalone: true,
@@ -69,13 +15,14 @@ interface DailyUsageData {
 
 export class Dashboard implements OnInit{
   private apiService = inject(Api);
+  private dashboardService = inject(DashboardData);
 
   chartData: ChartData = new ChartData();
 
   public stat$?: Observable<GameStat>;
   public siteVisits$? : Observable<SiteVisit[]>;
 
-  public dummyData: SiteVisit[] = getData();
+  public dummyData: SiteVisit[] = this.dashboardService.getData();
 
   ngOnInit(): void{
     this.stat$ = this.apiService.getDashboardStat();
@@ -86,17 +33,24 @@ export class Dashboard implements OnInit{
     this.chartData.Add([],["Pink"]);
 
     this.stat$.subscribe(result => {
-      createPointsDisplay('pointsCard', getPointsData(result));
-      createExpGauge('expCard', getExpData(result));
-      createLevelDisplay('levelCard', getLevelData(result));
+      createPointsDisplay('pointsCard', this.dashboardService.getPointsData(result));
+      createExpGauge('expCard', this.dashboardService.getExpData(result));
+      createLevelDisplay('levelCard', this.dashboardService.getLevelData(result));
     })
 
-    createStreakDisplay('streakCard', getStreakData());
+    createStreakDisplay('streakCard', this.dashboardService.getStreakData());
+
+    createCategoriesChart('by-category', this.dashboardService.getCategoriesData(this.dummyData));
+    createTopSitesChart('by-top-sites', this.dashboardService.getTopSitesData(this.dummyData, 5));
+    createTimeSpentChart('by-time-spent', this.dashboardService.getTimeSpentData(this.dummyData), this.dashboardService.getProductiveTimeSpentData(this.dummyData));
 
     this.siteVisits$.subscribe(result => {
-      createCategoriesChart('by-category', getCategoriesData(result));
-      createTopSitesChart('by-top-sites', getTopSitesData(result, 5));
+      createCategoriesChart('by-category', this.dashboardService.getCategoriesData(result));
+      createTopSitesChart('by-top-sites', this.dashboardService.getTopSitesData(result, 5));
+      createTimeSpentChart('by-time-spent', this.dashboardService.getTimeSpentData(result), this.dashboardService.getProductiveTimeSpentData(result));
     })
+
+
 
   }
 }
@@ -115,102 +69,6 @@ const darkThemeLayout: Partial<Plotly.Layout> = {
   showlegend: false,
 };
 
-//#region DATA GET
-function getPointsData(data: GameStat): PointsData{
-  return {
-    title: "POINTS",
-    value: data.coin
-  }
-}
-
-function getExpData(data: GameStat): ExpGaugeData{
-  return {
-    title: "EXP",
-    percentage: data.experiencePoints
-  }
-}
-
-function getLevelData(data: GameStat): LevelData{
-  return {
-    title: "LEVEL",
-    level: data.level
-  }
-}
-
-function getStreakData(): StreakData{
-  return {
-    title: "STREAK",
-    value: 9,
-    trendData: [1,2,3,4,4,5]
-  };
-}
-
-function getCategoriesData(siteVisits: SiteVisit[]): CategoriesData{
-  let data: CategoriesData = {
-    title: "Category",
-    categories: []
-  };
-  siteVisits.forEach(siteVisit => {
-    let cachedData = data.categories.find(d => d.name == siteVisit.mainCategory);
-    if(cachedData != null){
-      cachedData.value += siteVisit.timeSpent;
-    }
-    else{
-      data.categories.push({
-        name: siteVisit.mainCategory,
-        value: siteVisit.timeSpent
-      })
-    }
-
-    
-  });
-  return data;
-}
-
-function getTopSitesData(siteVisits: SiteVisit[], topK: number): TopSitesData{
-  let data: TopSitesData = {
-    title: "Top Sites",
-    sites: []
-  };
-  siteVisits.forEach(siteVisit => {
-    let domainEndIndex = findThirdSlashIndex(siteVisit.siteUrl);
-    let cachedData = data.sites.find(s => s.url == siteVisit.siteUrl.slice(0, domainEndIndex));
-    if(cachedData != null){
-      cachedData.timeSpent += siteVisit.timeSpent;
-    }
-    else{
-      data.sites.push({
-        url: siteVisit.siteUrl.slice(0, domainEndIndex),
-        timeSpent: siteVisit.timeSpent
-      })
-    }    
-  });
-
-  //Take only top K number of data
-  data.sites = data.sites.sort((a,b) => b.timeSpent - a.timeSpent).slice(0, topK);
-  data.sites.forEach(element => {
-    element.url = new URL(element.url).hostname;
-  });
-
-  return data;
-}
-
-
-function findThirdSlashIndex(str: string) {
-  let firstSlash = str.indexOf('/');
-  if (firstSlash === -1) {
-    return -1; // No first slash found
-  }
-
-  let secondSlash = str.indexOf('/', firstSlash + 1);
-  if (secondSlash === -1) {
-    return -1; // No second slash found
-  }
-
-  let thirdSlash = str.indexOf('/', secondSlash + 1);
-  return thirdSlash;
-}
-//#endregion
 /**
  * Creates a points display card (large number display)
  */
@@ -375,7 +233,7 @@ function createStreakDisplay(elementId: string, data: StreakData) {
  */
 function createCategoriesChart(elementId: string, data: CategoriesData) {
   const colors = [
-    '#344e41', '#3a5a40', '#588157', '#a3b18a', '#415a77'
+    '#549BE4', '#48CFAF', '#F5B95A', '#E47C7C', '#9D8CF0'
   ];
 
   let smallCategories = data.categories.sort((a,b) => a.value - b.value).slice(0, data.categories.length - 5);
@@ -453,7 +311,7 @@ function createTopSitesChart(elementId: string, data: TopSitesData) {
     x: reversedSites.map(site => site.timeSpent),
     y: reversedSites.map(site => site.url), // The URLs remain as the y-axis labels
       marker: {
-        color: '#415a77',
+        color: '#5A82A8',
         cornerradius: 10 
     } as any // <-- Add 'as any' to bypass the type check
   };
@@ -504,23 +362,51 @@ function createTopSitesChart(elementId: string, data: TopSitesData) {
 /**
  * Creates a time spent line chart
  */
-function createTimeSpentChart(elementId: string, data: TimeSpentData) {
-  const trace: Partial<Plotly.PlotData> = {
+function convertDate(dateString: string) {
+  const parts = dateString.split('/');
+  const month = parseInt(parts[0], 10);
+  const day = parseInt(parts[1], 10);
+
+  const date = new Date(2000, month - 1, day);
+  const monthName = date.toLocaleString('default', { month: 'short' });
+
+  return `${monthName}-${day}`;
+}
+
+function createTimeSpentChart(elementId: string, overallData: TimeSpentData, productiveTimeData: TimeSpentData) {
+  const trace: Partial<Plotly.Data> = {
     type: 'scatter',
     mode: 'lines+markers',
-    x: data.dates,
-    y: data.values,
-    line: { color: '#6395F2', width: 3 },
-    marker: { color: '#6395F2', size: 6 },
+    x: overallData.dates.map(convertDate),
+    y: overallData.values.map(d => d / 60),
+    line: { color: '#8E9BFF', width: 3 },
+    marker: { color: '#8E9BFF', size: 8, symbol: 'circle' },
     fill: 'tonexty',
-    fillcolor: 'rgba(99, 149, 242, 0.1)'
+    fillcolor: 'rgba(142, 155, 255, 0.2)',
+    name: "Total time",
+    hovertemplate: '<b>Total time</b>: %{y:.1f} min<extra></extra>'
+  };
+
+  const trace1: Partial<Plotly.Data> = {
+    type: 'scatter',
+    mode: 'lines+markers',
+    x: productiveTimeData.dates.map(convertDate),
+    y: productiveTimeData.values.map(d => d / 60),
+    line: { color: '#FFC107', width: 3 },
+    marker: { color: '#FFC107', size: 8, symbol: 'circle' },
+    fill: 'tonexty',
+    fillcolor: 'rgba(255, 193, 7, 0.2)',
+    name: "Productive time",
+    hovertemplate: '<b>Productive time</b>: %{y:.1f} min<extra></extra>'
   };
 
   const layout: Partial<Plotly.Layout> = {
-    ...darkThemeLayout,
+    width: 970,
+    plot_bgcolor: darkThemeLayout.plot_bgcolor,
+    paper_bgcolor: darkThemeLayout.paper_bgcolor,
     title: {
-      text: data.title,
-      font: { size: 14, color: '#A0AEC0' },
+      text: overallData.title,
+      font: { size: 18, color: '#E2E8F0', family: 'Arial, sans-serif' },
       x: 0.02,
       y: 0.95,
       xanchor: 'left'
@@ -529,23 +415,40 @@ function createTimeSpentChart(elementId: string, data: TimeSpentData) {
       showgrid: false,
       zeroline: false,
       showline: false,
-      tickfont: { size: 10 }
+      tickfont: { size: 12, color: '#A0AEC0' },
+      range: [-0.5, 10],
     },
     yaxis: {
       showgrid: true,
       gridcolor: '#2D3748',
       zeroline: false,
       showline: false,
-      tickfont: { size: 10 },
-      ticksuffix: 'h'
+      tickfont: { size: 12, color: '#A0AEC0' },
+      ticksuffix: ' min',
+    },
+    legend: {
+      font: { size: 12, color: '#E2E8F0' },
+      x: 1,
+      xanchor: 'right',
+      y: 1
+    },
+    hovermode: 'x unified',
+    hoverlabel: {
+      bgcolor: '#2D3748',
+      bordercolor: '#4A5568',
+      font: {
+        size: 13,
+        color: '#E2E8F0'
+      },
+      namelength: -1
     }
   };
 
-  const config: Partial<Plotly.Config> = {
+  const config = {
     displayModeBar: false
   };
 
-  Plotly.newPlot(elementId, [trace], layout, config);
+  Plotly.newPlot(elementId, [trace1, trace], layout, config);
 }
 
 /**
@@ -609,213 +512,4 @@ class ChartData{
     if(labels) this.Labels.push(...labels);
     if(datas) this.Datas.push(...datas);
   }
-}
-
-function getData(): SiteVisit[]{
-  return [
-  {
-    "siteUrl": "https://github.com/features",
-    "baseProductiveScore": 95,
-    "timeSpent": 45.78,
-    "mainCategory": "Tech"
-  },
-  {
-    "siteUrl": "https://stackoverflow.com/questions/12345/how-to-center-a-div",
-    "baseProductiveScore": 98,
-    "timeSpent": 15.21,
-    "mainCategory": "Tech"
-  },
-  {
-    "siteUrl": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-    "baseProductiveScore": 95,
-    "timeSpent": 62.55,
-    "mainCategory": "Tech"
-  },
-  {
-    "siteUrl": "https://aws.amazon.com/console",
-    "baseProductiveScore": 90,
-    "timeSpent": 121.89,
-    "mainCategory": "Tech"
-  },
-  {
-    "siteUrl": "https://mail.google.com/mail/u/0/#inbox",
-    "baseProductiveScore": 90,
-    "timeSpent": 55.1,
-    "mainCategory": "Productivity"
-  },
-  {
-    "siteUrl": "https://docs.google.com/spreadsheets/d/1a2b3c",
-    "baseProductiveScore": 95,
-    "timeSpent": 88.43,
-    "mainCategory": "Productivity"
-  },
-  {
-    "siteUrl": "https://calendar.google.com/calendar/r",
-    "baseProductiveScore": 95,
-    "timeSpent": 12.3,
-    "mainCategory": "Productivity"
-  },
-  {
-    "siteUrl": "https://app.slack.com/client/T012345/C67890",
-    "baseProductiveScore": 90,
-    "timeSpent": 150.67,
-    "mainCategory": "Productivity"
-  },
-  {
-    "siteUrl": "https://www.linkedin.com/feed/",
-    "baseProductiveScore": 65,
-    "timeSpent": 25.98,
-    "mainCategory": "Productivity"
-  },
-  {
-    "siteUrl": "https://trello.com/b/boardid/project-alpha",
-    "baseProductiveScore": 98,
-    "timeSpent": 76.11,
-    "mainCategory": "Productivity"
-  },
-  {
-    "siteUrl": "https://www.facebook.com/",
-    "baseProductiveScore": 10,
-    "timeSpent": 48.23,
-    "mainCategory": "Social Media"
-  },
-  {
-    "siteUrl": "https://twitter.com/home",
-    "baseProductiveScore": 15,
-    "timeSpent": 33.7,
-    "mainCategory": "Social Media"
-  },
-  {
-    "siteUrl": "https://www.instagram.com/",
-    "baseProductiveScore": 5,
-    "timeSpent": 68.14,
-    "mainCategory": "Social Media"
-  },
-  {
-    "siteUrl": "https://www.reddit.com/r/funny",
-    "baseProductiveScore": 5,
-    "timeSpent": 51.5,
-    "mainCategory": "Social Media"
-  },
-  {
-    "siteUrl": "https://www.reddit.com/r/programming",
-    "baseProductiveScore": 70,
-    "timeSpent": 42.88,
-    "mainCategory": "Tech"
-  },
-  {
-    "siteUrl": "https://www.youtube.com/",
-    "baseProductiveScore": 20,
-    "timeSpent": 95.32,
-    "mainCategory": "Entertainment"
-  },
-  {
-    "siteUrl": "https://www.youtube.com/watch?v=some_educational_video",
-    "baseProductiveScore": 80,
-    "timeSpent": 28.6,
-    "mainCategory": "Education"
-  },
-  {
-    "siteUrl": "https://www.netflix.com/browse",
-    "baseProductiveScore": 5,
-    "timeSpent": 125.0,
-    "mainCategory": "Entertainment"
-  },
-  {
-    "siteUrl": "https://open.spotify.com/",
-    "baseProductiveScore": 50,
-    "timeSpent": 240.15,
-    "mainCategory": "Entertainment"
-  },
-  {
-    "siteUrl": "https://www.nytimes.com/",
-    "baseProductiveScore": 55,
-    "timeSpent": 18.9,
-    "mainCategory": "News"
-  },
-  {
-    "siteUrl": "https://www.bbc.com/news",
-    "baseProductiveScore": 55,
-    "timeSpent": 22.45,
-    "mainCategory": "News"
-  },
-  {
-    "siteUrl": "https://en.wikipedia.org/wiki/Machine_learning",
-    "baseProductiveScore": 85,
-    "timeSpent": 31.23,
-    "mainCategory": "Reference"
-  },
-  {
-    "siteUrl": "https://www.coursera.org/learn/machine-learning",
-    "baseProductiveScore": 98,
-    "timeSpent": 112.8,
-    "mainCategory": "Education"
-  },
-  {
-    "siteUrl": "https://www.udemy.com/course/the-web-developer-bootcamp/",
-    "baseProductiveScore": 95,
-    "timeSpent": 78.34,
-    "mainCategory": "Education"
-  },
-  {
-    "siteUrl": "https://www.khanacademy.org/math/algebra",
-    "baseProductiveScore": 100,
-    "timeSpent": 49.99,
-    "mainCategory": "Education"
-  },
-  {
-    "siteUrl": "https://www.amazon.com/deals",
-    "baseProductiveScore": 15,
-    "timeSpent": 19.55,
-    "mainCategory": "Shopping"
-  },
-  {
-    "siteUrl": "https://www.etsy.com/",
-    "baseProductiveScore": 15,
-    "timeSpent": 24.05,
-    "mainCategory": "Shopping"
-  },
-  {
-    "siteUrl": "https://www.wsj.com/news/markets",
-    "baseProductiveScore": 75,
-    "timeSpent": 35.6,
-    "mainCategory": "Finance"
-  },
-  {
-    "siteUrl": "https://www.bloomberg.com/",
-    "baseProductiveScore": 80,
-    "timeSpent": 41.2,
-    "mainCategory": "Finance"
-  },
-  {
-    "siteUrl": "https://www.expedia.com/",
-    "baseProductiveScore": 25,
-    "timeSpent": 17.76,
-    "mainCategory": "Travel"
-  },
-  {
-    "siteUrl": "https://www.airbnb.com/",
-    "baseProductiveScore": 25,
-    "timeSpent": 30.12,
-    "mainCategory": "Travel"
-  },
-  {
-    "siteUrl": "https://www.webmd.com/",
-    "baseProductiveScore": 40,
-    "timeSpent": 8.95,
-    "mainCategory": "Health"
-  },
-  {
-    "siteUrl": "https://www.nih.gov/",
-    "baseProductiveScore": 85,
-    "timeSpent": 29.8,
-    "mainCategory": "Health"
-  },
-  {
-    "siteUrl": "https://www.figma.com/files/project/12345/design-system",
-    "baseProductiveScore": 97,
-    "timeSpent": 180.3,
-    "mainCategory": "Design"
-  }
-]
 }

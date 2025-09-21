@@ -43,7 +43,7 @@ public class AuthenticationController : ControllerBase{
                 new CookieOptions{
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Lax,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTimeOffset.UtcNow.AddDays(30),
                     IsEssential = true
                 });

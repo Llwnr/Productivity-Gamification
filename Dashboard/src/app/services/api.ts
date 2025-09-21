@@ -12,7 +12,8 @@ export interface SiteVisit{
   siteUrl: string,
   baseProductiveScore: number
   timeSpent: number,
-  mainCategory: string
+  mainCategory: string,
+  visitDate: string
 }
 
 @Injectable({
@@ -24,10 +25,16 @@ export class Api {
   private apiUrl = "https://localhost:7131"
 
   getDashboardStat(): Observable<GameStat>{
-    return this.http.get<GameStat[]>(`${this.apiUrl}/Dashboard/UserStat`).pipe(map(array => array[0]));
+    const options = {
+      withCredentials: true
+    }
+    return this.http.get<GameStat[]>(`${this.apiUrl}/Dashboard/UserStat`, options).pipe(map(array => array[0]));
   }
 
   getUserSiteVisits(): Observable<SiteVisit[]>{
-    return this.http.get<SiteVisit[]>(`${this.apiUrl}/Dashboard/Analytics`);
+    const options = {
+      withCredentials: true
+    }
+    return this.http.get<SiteVisit[]>(`${this.apiUrl}/Dashboard/Analytics`, options);
   }
 }
