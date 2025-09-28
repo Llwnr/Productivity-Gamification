@@ -1,3 +1,5 @@
+using Gamification.Core.GameModels;
+
 namespace Gamification.Core.Models;
 
 public class User{

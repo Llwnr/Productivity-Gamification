@@ -1,6 +1,6 @@
 namespace Gamification.Core.Models;
 
-public class SiteVisitDTO{
+public class SiteVisitRecordDTO{
     public string SiteUrl{ get; set; }
     public float TimeSpent{ get; set; }//In seconds
     public float BaseProductiveScore{ get; set; }

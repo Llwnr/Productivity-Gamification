@@ -1,4 +1,6 @@
-namespace Gamification.Core.Models;
+using Gamification.Core.Models;
+
+namespace Gamification.Core.GameModels;
 
 public class GameStat{
     public string StatId { get; set; }

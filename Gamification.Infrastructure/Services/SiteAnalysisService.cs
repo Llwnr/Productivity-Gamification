@@ -27,44 +27,31 @@ public class SiteAnalysisService : ISiteAnalysisService{
         _inactivityRecordingService = inactivityRecordingService;
     }
     
-    public async Task<bool> AnalyzeSite(Prompt prompt, string userId, DateTime visitTime){
-        User? user = _dbContext.Users.FirstOrDefault(u => u.UserId == userId);
-        if (user == null || string.IsNullOrEmpty(user.Goal)){
-            Console.WriteLine("USER NOT FOUND or User has not set the goal");
+    public async Task<bool> AnalyzeSites(List<Prompt> prompts){
+        if (prompts.Count <= 0){
+            Console.WriteLine("Prompt is empty");
             return false;
         }
-        
-        string fullPrompt = $"User goal: {user.Goal} {prompt}";
-        Console.WriteLine("Site browsed: " + prompt.Title);
+        //Clear up prompts that have already been analyzed
+        ClearRedundantPrompts(prompts);
 
-        if (!_analysisFilter.IsAnalysisRequired(prompt.Description)){
-            Console.WriteLine("Skipping analysis");
+        List<SiteAnalysis>? analysisResults = (await _googleApi.Generate(prompts)).Analyses;
+        Console.WriteLine("Total no. of analyses: " + analysisResults.Count);
+        if (analysisResults == null || analysisResults.Count <= 0){
+            Console.WriteLine("Error, analysis result is empty");
             return false;
         }
-        
-        if (TryGetCachedAnalysis(prompt.Url, user.Goal, out AnalysisResult analysisResult)){
-            Console.WriteLine($"Found in database.");
-            _inactivityRecordingService.EndVisit(userId, visitTime);
-            
-            UserSiteVisit siteVisit = new UserSiteVisit{
-                UserId = userId,
-                Analysis = analysisResult,
-                Site = analysisResult.Site,
-                VisitStartDate = visitTime
-            };
 
-            _dbContext.Add(siteVisit);
-            _dbContext.SaveChanges();
-            
-            
-            return true;
-        }
-        
-        try{
-            Console.WriteLine("Performing analysis");
-            SiteAnalysis? analysis = await _googleApi.Generate(fullPrompt);
-            if (analysis != null){
-                _inactivityRecordingService.EndVisit(userId, visitTime);
+        for (int i = 0; i < analysisResults.Count; i++){
+            Prompt prompt = prompts[i];
+            User user = _dbContext.Users.First(u => u.UserId == prompt.UserId);
+            string fullPrompt = $"User goal: {user.Goal} {prompts[i]}";
+            try{
+                string associatedUserId = prompt.UserId;
+                Console.WriteLine("Performing analysis");
+                SiteAnalysis? analysis = analysisResults[i];
+                //Set previous site visit as inactive because site/tab has been switched.
+                _inactivityRecordingService.EndVisit(associatedUserId, DateTime.UtcNow);
                 // float finalScore = _scoreProcessingService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
                 // Console.WriteLine($"Score: {finalScore}");
 
@@ -73,7 +60,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
                     Title = prompt.Title,
                     Description = prompt.Description
                 };
-                
+            
                 AnalysisResult result = new AnalysisResult{
                     Category = analysis.Category,
                     IntrinsicScore = analysis.IntrinsicScore,
@@ -83,27 +70,33 @@ public class SiteAnalysisService : ISiteAnalysisService{
                 };
 
                 UserSiteVisit siteVisit = new UserSiteVisit{
-                    UserId = userId,
+                    UserId = prompt.UserId,
                     Analysis = result,
                     Site = site,
-                    VisitStartDate = visitTime
+                    VisitStartDate = prompt.VisitStartTime
                 };
-                
+                if (prompt.VisitEndTime != null) siteVisit.VisitEndDate = prompt.VisitEndTime;
+            
                 _dbContext.Add(site);
                 _dbContext.Add(result);
                 _dbContext.Add(siteVisit);
                 _dbContext.SaveChanges();
 
                 Console.WriteLine($"Successfully added site {prompt.Title} to database");
-
-                return true;
             }
-            return false;
+            catch (Exception e){
+                await Console.Error.WriteLineAsync("Exception while generating site analysis response from LLM: \n" + e);
+                throw;
+            }
+
+            if (i + 1 >= analysisResults.Count) return true;
         }
-        catch (Exception e){
-            await Console.Error.WriteLineAsync("Exception while generating site analysis response from LLM: \n" + e);
-            throw;
-        }
+        // if (!_analysisFilter.IsAnalysisRequired(prompt.Description)){
+        //     Console.WriteLine("Skipping analysis");
+        //     return false;
+        // }
+
+        return false;
     }
 
     //Checks whether the site is already analyzed, if yes uses that analysis for scoring instead of querying LLM again.
@@ -122,5 +115,31 @@ public class SiteAnalysisService : ISiteAnalysisService{
         }
 
         return false;
+    }
+
+    void ClearRedundantPrompts(List<Prompt> prompts){
+        for(int i=0; i<prompts.Count; i++){
+            User? user = _dbContext.Users.FirstOrDefault(u => u.UserId == prompts[i].UserId);
+            if (TryGetCachedAnalysis(prompts[i].Url, user.Goal, out var result)){
+                Console.WriteLine($"Found in database.");
+                // _inactivityRecordingService.EndVisit(userId, visitTime);
+            
+                UserSiteVisit siteVisit = new UserSiteVisit{
+                    UserId = prompts[i].UserId,
+                    Analysis = result,
+                    Site = result.Site,
+                    VisitStartDate = prompts[i].VisitStartTime
+                };
+
+                _dbContext.Add(siteVisit);
+                _dbContext.SaveChanges();
+                
+                prompts.RemoveAt(i);
+                i--;
+            }
+        }
+        if (prompts.Count <= 0){
+            Console.WriteLine("All prompts of a batch have been cached.");
+        }
     }
 }

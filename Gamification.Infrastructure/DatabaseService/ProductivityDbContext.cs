@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Gamification.Core.Models;
+using Gamification.Core.GameModels;
 
 namespace Gamification.Infrastructure.DatabaseService;
 

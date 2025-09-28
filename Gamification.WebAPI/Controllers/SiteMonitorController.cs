@@ -5,6 +5,7 @@ using Gamification.Core.Models;
 using Gamification.Core.Interfaces;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Services;
+using Gamification.WebAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Gamification.WebAPI.Controllers;
@@ -25,11 +26,20 @@ public class SiteMonitorController : ControllerBase{
     /// <summary>
     /// Will take in the site's information & user's goals then prompt the LLM to analyze site for productivity scores.
     /// </summary>
-    [Authorize]
+    // [Authorize]
     [HttpPost("AnalyzeSite")]
-    public void AnalyzeSite([FromBody] Prompt siteVisitDetails){
+    public IActionResult AnalyzeSite([FromBody] SiteVisitDTO siteVisitDetails){
         Console.WriteLine("Received request to analyze site.");
-        _analysisQueryManager.EnqueueAnalysisQuery(siteVisitDetails, UserId);
+        Prompt prompt = new Prompt{
+            Url = siteVisitDetails.Url,
+            Title = siteVisitDetails.Title,
+            Description = siteVisitDetails.Description,
+            UserId = UserId,
+            VisitStartTime = DateTime.UtcNow,
+            VisitEndTime = null
+        };
+        _analysisQueryManager.EnqueueAnalysisQuery(prompt);
+        return Ok("Received");
     }
 
     [Authorize]

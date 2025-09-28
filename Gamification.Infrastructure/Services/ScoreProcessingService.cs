@@ -1,5 +1,6 @@
 using Gamification.Core.Interfaces;
 using Gamification.Core.Models;
+using Gamification.Core.GameModels;
 using Gamification.Infrastructure.DatabaseService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

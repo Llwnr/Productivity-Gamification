@@ -3,9 +3,9 @@
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <IntrospectionStateNumber>974</IntrospectionStateNumber>
+      <IntrospectionStateNumber>1054</IntrospectionStateNumber>
       <ServerVersion>17.5</ServerVersion>
-      <StartupTime>1757071025</StartupTime>
+      <StartupTime>1758695659</StartupTime>
       <TimeZones>true ACDT
 true ACSST
 false ACST
@@ -231,7 +231,7 @@ false America/Rio_Branco
 false America/Rosario
 true America/Santa_Isabel
 false America/Santarem
-false America/Santiago
+true America/Santiago
 false America/Santo_Domingo
 false America/Sao_Paulo
 true America/Scoresbysund
@@ -261,10 +261,10 @@ false Antarctica/Davis
 false Antarctica/DumontDUrville
 false Antarctica/Macquarie
 false Antarctica/Mawson
-false Antarctica/McMurdo
+true Antarctica/McMurdo
 false Antarctica/Palmer
 false Antarctica/Rothera
-false Antarctica/South_Pole
+true Antarctica/South_Pole
 false Antarctica/Syowa
 true Antarctica/Troll
 false Antarctica/Vostok
@@ -429,7 +429,7 @@ false CHAST
 false CHUT
 false CKT
 true CLST
-false CLT
+true CLT
 false COT
 false CST
 true CST6CDT
@@ -442,13 +442,13 @@ true Canada/Newfoundland
 true Canada/Pacific
 false Canada/Saskatchewan
 false Canada/Yukon
-false Chile/Continental
-false Chile/EasterIsland
+true Chile/Continental
+true Chile/EasterIsland
 true Cuba
 false DAVT
 false DDUT
-false EASST
-false EAST
+true EASST
+true EAST
 false EAT
 true EDT
 true EEST
@@ -654,8 +654,8 @@ false NOVT
 false NPT
 false NST
 false NUT
-false NZ
-false NZ-CHAT
+true NZ
+true NZ-CHAT
 true NZDT
 false NZST
 false NZT
@@ -680,11 +680,11 @@ false PWT
 true PYST
 false PYT
 false Pacific/Apia
-false Pacific/Auckland
+true Pacific/Auckland
 false Pacific/Bougainville
-false Pacific/Chatham
+true Pacific/Chatham
 false Pacific/Chuuk
-false Pacific/Easter
+true Pacific/Easter
 false Pacific/Efate
 false Pacific/Enderbury
 false Pacific/Fakaofo
@@ -806,7 +806,7 @@ false Zulu
 14650||10|C|G
 14650||-9223372036854775808|U|G
 14650||10|U|G</Grants>
-      <IntrospectionStateNumber>974</IntrospectionStateNumber>
+      <IntrospectionStateNumber>1054</IntrospectionStateNumber>
       <ObjectId>16387</ObjectId>
       <OwnerName>postgres</OwnerName>
     </database>
@@ -4228,8 +4228,8 @@ false Zulu
     <schema id="265" parent="3" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>974</IntrospectionStateNumber>
-      <LastIntrospectionLocalTimestamp>2025-09-05.13:14:19</LastIntrospectionLocalTimestamp>
+      <IntrospectionStateNumber>1054</IntrospectionStateNumber>
+      <LastIntrospectionLocalTimestamp>2025-09-28.08:28:30</LastIntrospectionLocalTimestamp>
       <ObjectId>2200</ObjectId>
       <StateNumber>532</StateNumber>
       <OwnerName>pg_database_owner</OwnerName>
@@ -4242,7 +4242,7 @@ false Zulu
     </table>
     <table id="267" parent="265" name="analysis_results">
       <ObjectId>16409</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4254,13 +4254,13 @@ false Zulu
     </table>
     <table id="269" parent="265" name="sites">
       <ObjectId>16393</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
     <table id="270" parent="265" name="user_site_visits">
       <ObjectId>16435</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4356,7 +4356,7 @@ false Zulu
       <ColNames>analysis_id</ColNames>
       <ObjectId>16415</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4367,7 +4367,7 @@ false Zulu
       <ColNames>site_id
 user_goal</ColNames>
       <ObjectId>16458</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationIds>100
@@ -4483,7 +4483,7 @@ pg_catalog</CollationParentNames>
       <ColNames>site_id</ColNames>
       <ObjectId>16399</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4493,7 +4493,7 @@ pg_catalog</CollationParentNames>
     <index id="300" parent="269" name="ix_sites_url">
       <ColNames>url</ColNames>
       <ObjectId>16460</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4578,7 +4578,7 @@ pg_catalog</CollationParentNames>
       <ColNames>visit_id</ColNames>
       <ObjectId>16441</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4588,7 +4588,7 @@ pg_catalog</CollationParentNames>
     <index id="313" parent="270" name="ix_user_site_visits_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16464</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4597,7 +4597,7 @@ pg_catalog</CollationParentNames>
     <index id="314" parent="270" name="ix_user_site_visits_site_id">
       <ColNames>site_id</ColNames>
       <ObjectId>16463</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4606,7 +4606,7 @@ pg_catalog</CollationParentNames>
     <index id="315" parent="270" name="ix_user_site_visits_analysis_id">
       <ColNames>analysis_id</ColNames>
       <ObjectId>16461</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4615,14 +4615,14 @@ pg_catalog</CollationParentNames>
     <index id="316" parent="270" name="ix_user_site_visits_visit_start_date">
       <ColNames>visit_start_date</ColNames>
       <ObjectId>16465</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
     <index id="317" parent="270" name="ix_user_site_visits_processed_at">
       <ColNames>processed_at</ColNames>
       <Condition>(processed_at IS NULL)</Condition>
       <ObjectId>16462</ObjectId>
-      <StateNumber>971</StateNumber>
+      <StateNumber>1053</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
     <key id="318" parent="270" name="pk_user_site_visits">

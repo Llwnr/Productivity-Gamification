@@ -34,15 +34,15 @@ public class DashboardController : ControllerBase{
             .Include(s => s.Site)
             .Where(u => u.UserId == UserId && u.VisitEndDate != null)
             .ToList();
-        List<SiteVisitDTO> siteVisitDtos = new();
+        List<SiteVisitRecordDTO> siteVisitDtos = new();
 
         foreach (var visit in userSiteVisits){
-            SiteVisitDTO? sameSiteVisit = siteVisitDtos.FirstOrDefault(v => v.SiteUrl == visit.Site?.Url);
+            SiteVisitRecordDTO? sameSiteVisit = siteVisitDtos.FirstOrDefault(v => v.SiteUrl == visit.Site?.Url);
             if (sameSiteVisit != null){
                 sameSiteVisit.TimeSpent += (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds;
             }
             else{
-                siteVisitDtos.Add(new SiteVisitDTO{
+                siteVisitDtos.Add(new SiteVisitRecordDTO{
                     SiteUrl = visit.Site.Url,
                     BaseProductiveScore = (float)(visit.Analysis.IntrinsicScore * 0.5 * visit.Analysis.RelevanceScore),
                     TimeSpent = (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds,

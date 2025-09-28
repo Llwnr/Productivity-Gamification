@@ -9,8 +9,7 @@ namespace Gamification.WebAPI.Services;
 public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
 {
     // BlockingCollection is thread-safe and handles waiting for items
-    private readonly Channel<KeyValuePair<Prompt, string>> _queriesChannel =
-        Channel.CreateUnbounded<KeyValuePair<Prompt, string>>();
+    private List<Prompt> prompts = new  List<Prompt>();
 
     // Inject IServiceScopeFactory to resolve scoped services within the ExecuteAsync loop
     private readonly IServiceScopeFactory _scopeFactory;
@@ -23,46 +22,34 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
     }
 
     // Public method to enqueue new analysis queries
-    public async Task EnqueueAnalysisQuery(Prompt prompt, string userId){
-        await _queriesChannel.Writer.WriteAsync(new KeyValuePair<Prompt, string>(prompt, userId));
+    public async Task EnqueueAnalysisQuery(Prompt prompt){
+        //When new prompt comes in, it means new site/tab visited. In that case, set the previous site/tab visited as visit ended.
+        if(prompts.Count > 0) prompts.Last().VisitEndTime = DateTime.UtcNow;
+        prompts.Add(prompt);
         _logger.LogInformation("Enqueued analysis query for prompt: {PromptKey}", prompt.Title);
     }
 
     // The core execution logic of the background service
     protected override async Task ExecuteAsync(CancellationToken stoppingToken){
+        int batchInterval = 30000;
         while (!stoppingToken.IsCancellationRequested){
+            await Task.Delay(batchInterval);
             // Define the Polly retry policy once
             AsyncRetryPolicy retryPolicy = DefineRetryPolicy();
             try{
-                await foreach (var query in _queriesChannel.Reader.ReadAllAsync(stoppingToken)){
-                    //Record the exact time the user visited the site.
-                    DateTime visitTime =  DateTime.UtcNow;
-                    try{
-                        // Execute the analysis with the defined retry policy
-                        await retryPolicy.ExecuteAsync(async () => {
-                            _logger.LogInformation("Attempting analysis for prompt: {PromptKey}, User: {UserId}",
-                                query.Key.Title, query.Value);
-
-                            // Create a new scope for each operation to correctly handle scoped services
-                            using (var scope = _scopeFactory.CreateScope()){
-                                // Resolve ISiteAnalysisService from the current scope
-                                var siteAnalysisService =
-                                    scope.ServiceProvider.GetRequiredService<ISiteAnalysisService>();
-                                await siteAnalysisService.AnalyzeSite(query.Key, query.Value, visitTime);
-                            }
-
-                            _logger.LogInformation("Successfully analyzed site for prompt: {PromptKey}",
-                                query.Key.Title);
-                        });
+                await retryPolicy.ExecuteAsync(async () => {
+                    // _logger.LogInformation("Attempting analysis for prompt: {PromptKey}, User: {UserId}",
+                    //     prompts[0].Title, prompts[0].UserId);
+                    using (var scope = _scopeFactory.CreateScope()){
+                        // Resolve ISiteAnalysisService from the current scope
+                        var siteAnalysisService =
+                            scope.ServiceProvider.GetRequiredService<ISiteAnalysisService>();
+                        await siteAnalysisService.AnalyzeSites(prompts);
                     }
-                    catch (Exception ex){
-                        // This catch block is hit if Polly's retry policy fails all attempts.
-                        // Log the final failure and potentially handle the "poison message" (e.g., move to dead-letter queue).
-                        _logger.LogError(ex,
-                            "The operation failed after all retries for prompt: {PromptKey}, User: {UserId}. Query will not be reprocessed.",
-                            query.Key.Title, query.Value);
-                    }
-                }
+                    _logger.LogInformation("Finished analyzing the prompt. Clearing up prompt now.");
+                    prompts.Clear();
+                });
+                
             }
             catch (OperationCanceledException){
                 // This exception is expected when the stoppingToken is cancelled (e.g., application shutdown).

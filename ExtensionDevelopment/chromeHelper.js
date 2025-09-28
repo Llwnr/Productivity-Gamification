@@ -68,7 +68,7 @@ async function setSiteVisited(url, tabId, triggerType) {
 	
 	// let urlWithDetail = tabId + " " + triggerType + " " + url;
     siteAnalysisDebouncer = setTimeout(()=>{
-		getTitleAndDescription(tabId, (tags) => sendSiteData(url, tags),2000);
+		getTitleAndDescription(tabId, (tags) => sendSiteData(url, tags), 2000);
     })
 
 	activeTabId = tabId;
@@ -84,7 +84,7 @@ function sendSiteData(url, tags){
         title: title,
         description: desc
     };
-    sendMessage("Calling for analysis of: " + title);
+    // sendMessage("Message from Js: Calling for analysis of: " + title);
     const api_url = `${API_BASE_URL}/${API_ENDPOINT}`;
     fetch(api_url, {
         method: 'POST',
