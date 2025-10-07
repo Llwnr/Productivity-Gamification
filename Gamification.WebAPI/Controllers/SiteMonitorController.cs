@@ -57,6 +57,7 @@ public class SiteMonitorController : ControllerBase{
             if (DateTime.TryParse(lastActiveTimeStr, out var lastActiveTime)){
                 lastActiveTime = lastActiveTime.ToUniversalTime();
                 _inactivityRecordingService.RecordAsInactive(UserId, lastActiveTime);
+                Console.WriteLine("Last active datetime: " + lastActiveTime);
                 return;
             }
             Console.Error.WriteLine("Failed to parse time.");

@@ -30,18 +30,21 @@ public class ScoreProcessingService : IScoreProcessingService{
             .OrderBy(u => u.VisitStartDate)
             .ToArray();
         for (int i = 0; i < siteVisits.Length; i++){
+            if (siteVisits[i].VisitEndDate == null){
+                Console.WriteLine("A site does not have VisitEndDate set yet. So it is not possible to calculate its score");
+                continue;
+            }
             //Set as processed for all types of records
             siteVisits[i].ProcessedAt = DateTime.UtcNow;
             //Only record time spent on active sites, not inactivity recording dummy records.
             if (IsInactiveRecord(siteVisits[i])) continue;
-
             float timeSpent = (float)(siteVisits[i]?.VisitEndDate - siteVisits[i]?.VisitStartDate).Value.TotalSeconds;
 
             GameStat userStat =  _dbContext.GameStats.Where(stats => stats.UserId == userId).First();
             AnalysisResult? analysis = _dbContext.GetAnalysisOfSite(siteVisits[i].SiteId, userId);
             if (analysis == null) throw new Exception();
             
-            userStat.ExperiencePoints += timeSpent * (float)(analysis.IntrinsicScore * 0.5 * analysis.RelevanceScore);
+            userStat.ExperiencePoints += timeSpent * (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore));
             
             _logger.LogInformation(
                 "Site {site} was visisted for {duration} seconds", 

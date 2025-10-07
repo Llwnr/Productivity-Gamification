@@ -5,12 +5,13 @@ var activeFullUrl = null;
 
 chrome.runtime.onInstalled.addListener(async () => {
 	await notifyLastActiveTime();
-	setInterval(setLatestActiveTime, 1000); //Store browser active time & update it regularly
+	setLastActiveTime(); //Store browser active time & update it regularly
+	startingUp = true;
 })
 
 chrome.runtime.onStartup.addListener(async () => {
 	await notifyLastActiveTime();
-	setInterval(setLatestActiveTime, 1000);
+	setLastActiveTime();
 })
 
 chrome.tabs.onCreated.addListener((tab) => {
@@ -69,13 +70,14 @@ setInterval(() => {
 	})
 },2000)
 
-// chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-//   if (message.type === 'tab_focused') {
-//   	sendMessage("Wat da heck");
-//   	const [activeTab] = await chrome.tabs.query({active: true, currentWindow: true});
-// 		sendMessage('Okay tab is active: ' + sender.tab.url);
-//   } else if (message.type === 'tab_blurred') {
-//     // sendMessage('User switched away from tab:' + sender.tab.url);
-//     // Add your logic here for when the browser loses focus
-//   }
-// });
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  if (message.type === 'tab_focused') {
+  	const [activeTab] = await chrome.tabs.query({active: true, currentWindow: true});
+  	console.log("Active tab: " + activeTab.url + " ||| " + active.id);
+  	setSiteVisited(activeTab.url, activeTab.id, "tab_focused");
+	sendMessage('Okay tab is active: ' + sender.tab.url);		
+  } else if (message.type === 'tab_blurred') {
+    // sendMessage('User switched away from tab:' + sender.tab.url);
+    // Add your logic here for when the browser loses focus
+  }
+});

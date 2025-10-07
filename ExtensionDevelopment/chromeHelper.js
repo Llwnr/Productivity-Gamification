@@ -1,11 +1,15 @@
 const API_BASE_URL = "https://localhost:7131/SiteMonitor";
 const API_ENDPOINT = "AnalyzeSite";
 
+//A flag to allow essentials to start up first
+let startingUp = true;
+setInterval(() => startingUp = false, 500);
+
 const delay = (durationMs) => {
   return new Promise(resolve => setTimeout(resolve, durationMs));
 }
 
-function setLatestActiveTime(){
+function setLastActiveTime(){
     chrome.storage.local.set({latestActiveTime: new Date().toUTCString()});
 }
 
@@ -105,6 +109,7 @@ function sendSiteData(url, tags){
 }
 
 function notifyVisitChange(){
+    if(startingUp) return;
     fetch(`${API_BASE_URL}/ChangeVisit`,{
         method: 'POST',
         headers: {
@@ -115,6 +120,7 @@ function notifyVisitChange(){
 }
 
 async function notifyBrowsingStopped(){
+    if(startingUp) return;
     let notifyBrowsingStopped = `${API_BASE_URL}/BrowsingStopped`;
     fetch(notifyBrowsingStopped, {
         method: 'GET',
@@ -131,6 +137,10 @@ async function notifyBrowsingStopped(){
 //Basically, sends the last active browser time to the api for last activity, as on browser closure the last activity is not recorded.
 async function notifyLastActiveTime(){
     let lastActiveTime = await getLatestActiveTime();
+    if(lastActiveTime == null){
+        console.log("Extension installed for the first time, no previous active time set");
+        return;
+    }
     console.log('Previous closure time: ' + lastActiveTime);
 
     chrome.storage.local.set({browserClosedNormally: false});

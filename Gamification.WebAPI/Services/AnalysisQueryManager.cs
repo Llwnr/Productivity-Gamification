@@ -31,9 +31,11 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
 
     // The core execution logic of the background service
     protected override async Task ExecuteAsync(CancellationToken stoppingToken){
-        int batchInterval = 30000;
+        int batchInterval = 60*1000;
+        int minimumPromptLimit = 10;
         while (!stoppingToken.IsCancellationRequested){
-            await Task.Delay(batchInterval);
+            await Task.Delay(batchInterval, stoppingToken);
+            if (prompts.Count < minimumPromptLimit) continue;
             // Define the Polly retry policy once
             AsyncRetryPolicy retryPolicy = DefineRetryPolicy();
             try{
