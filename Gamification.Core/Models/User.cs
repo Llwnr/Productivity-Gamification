@@ -13,5 +13,4 @@ public class User{
     
     public ICollection<UserSiteVisit>? UserSiteVisits{ get; set; }
     public ICollection<GameStat>?  GameStats{ get; set; }
-    public ICollection<UserTask>? Tasks{ get; set; }
 }

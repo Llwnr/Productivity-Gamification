@@ -80,4 +80,9 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     // sendMessage('User switched away from tab:' + sender.tab.url);
     // Add your logic here for when the browser loses focus
   }
+
+  if(message.type === 'user_afk'){
+	notifyBrowsingStopped();
+	sendMessage("User is afk");
+  }
 });

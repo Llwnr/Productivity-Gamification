@@ -23,6 +23,7 @@ builder.Services.AddScoped<GoogleApi>();
 builder.Services.AddScoped<IScoreProcessingService, ScoreProcessingService>();
 builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
 builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
+builder.Services.AddScoped<IActivityRecorder, ActivityRecorder>();
 
 builder.Services.AddSingleton<AnalysisQueryManager>();
 builder.Services.AddSingleton<IAnalysisQueryManager>(provider => 

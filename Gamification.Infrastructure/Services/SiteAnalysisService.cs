@@ -28,6 +28,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
     }
     
     public async Task<bool> AnalyzeSites(List<Prompt> prompts){
+        prompts = prompts.Distinct().ToList();
         if (prompts.Count <= 0){
             Console.WriteLine("Prompt is empty");
             return false;
@@ -35,17 +36,17 @@ public class SiteAnalysisService : ISiteAnalysisService{
         //Clear up prompts that have already been analyzed
         ClearRedundantPrompts(prompts);
 
-        List<SiteAnalysis>? analysisResults = (await _googleApi.Generate(prompts)).Analyses;
+        List<SiteAnalysis>? analysisResults = (await _googleApi.Generate(prompts.ToList())).Analyses;
         Console.WriteLine("Total no. of analyses: " + analysisResults.Count);
         if (analysisResults == null || analysisResults.Count <= 0){
             Console.WriteLine("Error, analysis result is empty");
             return false;
         }
-
+        
         for (int i = 0; i < analysisResults.Count; i++){
             Prompt prompt = prompts[i];
             User user = _dbContext.Users.First(u => u.UserId == prompt.UserId);
-            string fullPrompt = $"User goal: {user.Goal} {prompts[i]}";
+            string fullPrompt = $"User goal: {user.Goal} {prompt}";
             try{
                 string associatedUserId = prompt.UserId;
                 Console.WriteLine("Performing analysis");
@@ -54,13 +55,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
                 _inactivityRecordingService.EndVisit(associatedUserId, DateTime.UtcNow);
                 // float finalScore = _scoreProcessingService.GetFinalScore(analysis.IntrinsicScore, analysis.RelevanceScore);
                 // Console.WriteLine($"Score: {finalScore}");
-
-                Site site = new Site{
-                    Url = prompt.Url,
-                    Title = prompt.Title,
-                    Description = prompt.Description
-                };
-            
+                Site site = _dbContext.Sites.First(s => s.Url == prompt.Url && s.Title == prompt.Title);
                 AnalysisResult result = new AnalysisResult{
                     Category = analysis.Category,
                     IntrinsicScore = analysis.IntrinsicScore,
@@ -68,18 +63,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
                     Site = site,
                     UserGoal = user.Goal
                 };
-
-                UserSiteVisit siteVisit = new UserSiteVisit{
-                    UserId = prompt.UserId,
-                    Analysis = result,
-                    Site = site,
-                    VisitStartDate = prompt.VisitStartTime
-                };
-                if (prompt.VisitEndTime != null) siteVisit.VisitEndDate = prompt.VisitEndTime;
-            
-                _dbContext.Add(site);
-                _dbContext.Add(result);
-                _dbContext.Add(siteVisit);
+                _dbContext.AnalysisResults.Add(result);
                 _dbContext.SaveChanges();
 
                 Console.WriteLine($"Successfully added site {prompt.Title} to database");
@@ -123,16 +107,6 @@ public class SiteAnalysisService : ISiteAnalysisService{
             if (TryGetCachedAnalysis(prompts[i].Url, user.Goal, out var result)){
                 Console.WriteLine($"Found in database.");
                 // _inactivityRecordingService.EndVisit(userId, visitTime);
-            
-                UserSiteVisit siteVisit = new UserSiteVisit{
-                    UserId = prompts[i].UserId,
-                    Analysis = result,
-                    Site = result.Site,
-                    VisitStartDate = prompts[i].VisitStartTime
-                };
-
-                _dbContext.Add(siteVisit);
-                _dbContext.SaveChanges();
                 
                 prompts.RemoveAt(i);
                 i--;

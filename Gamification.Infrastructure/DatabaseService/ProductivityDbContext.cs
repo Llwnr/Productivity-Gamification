@@ -10,11 +10,6 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
     public DbSet<UserSiteVisit> UserSiteVisits{ get; set; }
     public DbSet<User> Users{ get; set; }
     public DbSet<GameStat> GameStats{ get; set; }
-    
-    public DbSet<UserTask> Tasks{ get; set; }
-    public DbSet<Habit> Habits{ get; set; }
-    public DbSet<Dailies> Dailies{ get; set; }
-    public DbSet<Todo> Todos{ get; set; }
 
     //Defines the schema constraints, namings etc
     protected override void OnModelCreating(ModelBuilder modelBuilder){
@@ -23,7 +18,6 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         SetupAnalysisResultsTable(modelBuilder);
         SetupUserSiteVisitsTable(modelBuilder);
         SetupGameStatsTable(modelBuilder);
-        SetupTaskTable(modelBuilder);
     }
 
     void SetupUsersTable(ModelBuilder modelBuilder){
@@ -98,16 +92,6 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
             .HasOne(gs => gs.User)
             .WithMany(u => u.GameStats)
             .HasForeignKey(gs => gs.UserId);
-    }
-
-    void SetupTaskTable(ModelBuilder modelBuilder){
-        var entity = modelBuilder.Entity<UserTask>();
-        entity.HasKey(t => t.Id);
-        entity.Property(t => t.Id).HasDefaultValueSql("gen_random_uuid()");
-        entity
-            .HasOne(task => task.User)
-            .WithMany(user => user.Tasks)
-            .HasForeignKey(habit => habit.UserId);
     }
 
     public AnalysisResult? GetAnalysisOfSite(string siteId, string userId){

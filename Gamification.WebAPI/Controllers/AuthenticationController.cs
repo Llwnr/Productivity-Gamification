@@ -30,7 +30,7 @@ public class AuthenticationController : ControllerBase{
     }
     
     [HttpPost("Login")]
-    public IActionResult Login([FromBody] UserLogin user){
+    public IActionResult Login([FromBody] LoginDTO user){
         User? registeredUser = _dbContext.Users
             .FirstOrDefault(u => user.Username == u.Username || user.Username == u.Email);
         if (registeredUser != null && BCrypt.Net.BCrypt.Verify(user.Password, registeredUser.Password)){

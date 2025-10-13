@@ -23,15 +23,21 @@ public class ScoreProcessingService : IScoreProcessingService{
 
     public int ProcessScore(string userId){
         if(!_dbContext.GameStats.Any(stats => stats.UserId == userId)) CreateNewStats(userId);
+
+        FindAndConnectAnalysis(userId);
         
         UserSiteVisit[] siteVisits = _dbContext.UserSiteVisits
             .Include(u => u.Site)
-            .Where(u => u.ProcessedAt == null && u.AnalysisId != null)
+            .Where(u => u.ProcessedAt == null && u.AnalysisId != null && u.UserId == userId)
             .OrderBy(u => u.VisitStartDate)
             .ToArray();
         for (int i = 0; i < siteVisits.Length; i++){
             if (siteVisits[i].VisitEndDate == null){
                 Console.WriteLine("A site does not have VisitEndDate set yet. So it is not possible to calculate its score");
+                continue;
+            }
+            if (siteVisits[i].Analysis == null){
+                Console.WriteLine("A site does not have an analysis yet. So it is not possible to calculate its score");
                 continue;
             }
             //Set as processed for all types of records
@@ -56,6 +62,24 @@ public class ScoreProcessingService : IScoreProcessingService{
         return siteVisits.Length;
         
         bool IsInactiveRecord(UserSiteVisit siteVisit) => siteVisit.AnalysisId == null && siteVisit.SiteId == null;
+    }
+
+    void FindAndConnectAnalysis(string userId){
+        UserSiteVisit[] siteVisits = _dbContext.UserSiteVisits
+            .Include(u => u.Site)
+            .Include(u => u.User)
+            .Where(u => u.ProcessedAt == null && u.UserId == userId)
+            .OrderBy(u => u.VisitStartDate)
+            .ToArray();
+
+        foreach (var visit in siteVisits){
+            AnalysisResult associatedAnalysis = _dbContext.AnalysisResults
+                .FirstOrDefault(analysis => analysis.Site == visit.Site && analysis.UserGoal == visit.User.Goal);
+            if (associatedAnalysis == null) continue;
+
+            visit.Analysis = associatedAnalysis;
+
+        }
     }
 
     //Creates a new stat table for user if its not already created

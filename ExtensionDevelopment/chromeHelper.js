@@ -133,6 +133,8 @@ async function notifyBrowsingStopped(){
     clearActiveTabCache();
 }
 
+
+
 //Handles browser/extension being closed due to crashes/ power down etc.
 //Basically, sends the last active browser time to the api for last activity, as on browser closure the last activity is not recorded.
 async function notifyLastActiveTime(){

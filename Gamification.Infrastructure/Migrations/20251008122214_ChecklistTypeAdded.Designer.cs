@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Gamification.Infrastructure.DatabaseService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    partial class ProductivityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008122214_ChecklistTypeAdded")]
+    partial class ChecklistTypeAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,6 +58,55 @@ namespace Gamification.Infrastructure.Migrations
                         .HasDatabaseName("ix_game_stats_user_id");
 
                     b.ToTable("game_stats", (string)null);
+                });
+
+            modelBuilder.Entity("Gamification.Core.GameModels.UserTask", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("discriminator");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<int?>("RewardPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("reward_points");
+
+                    b.Property<string>("Tag")
+                        .HasColumnType("text")
+                        .HasColumnName("tag");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tasks");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_tasks_user_id");
+
+                    b.ToTable("tasks", (string)null);
+
+                    b.HasDiscriminator().HasValue("UserTask");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
@@ -221,6 +273,74 @@ namespace Gamification.Infrastructure.Migrations
                     b.ToTable("user_site_visits", (string)null);
                 });
 
+            modelBuilder.Entity("Gamification.Core.GameModels.Dailies", b =>
+                {
+                    b.HasBaseType("Gamification.Core.GameModels.UserTask");
+
+                    b.Property<string>("RepeatEvery")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("repeat_every");
+
+                    b.Property<string>("RepeatFrequency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("repeat_frequency");
+
+                    b.Property<string>("RepeatInterval")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("repeat_interval");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.HasDiscriminator().HasValue("Dailies");
+                });
+
+            modelBuilder.Entity("Gamification.Core.GameModels.Habit", b =>
+                {
+                    b.HasBaseType("Gamification.Core.GameModels.UserTask");
+
+                    b.Property<bool>("IsNegative")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_negative");
+
+                    b.Property<bool>("IsPositive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_positive");
+
+                    b.Property<int>("NegativeCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("negative_count");
+
+                    b.Property<int>("PositiveCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("positive_count");
+
+                    b.Property<DateTime>("ResetInterval")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reset_interval");
+
+                    b.HasDiscriminator().HasValue("Habit");
+                });
+
+            modelBuilder.Entity("Gamification.Core.GameModels.Todo", b =>
+                {
+                    b.HasBaseType("Gamification.Core.GameModels.UserTask");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_date");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_completed");
+
+                    b.HasDiscriminator().HasValue("Todo");
+                });
+
             modelBuilder.Entity("Gamification.Core.GameModels.GameStat", b =>
                 {
                     b.HasOne("Gamification.Core.Models.User", "User")
@@ -229,6 +349,18 @@ namespace Gamification.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_game_stats_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Gamification.Core.GameModels.UserTask", b =>
+                {
+                    b.HasOne("Gamification.Core.Models.User", "User")
+                        .WithMany("Tasks")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_tasks_users_user_id");
 
                     b.Navigation("User");
                 });
@@ -271,6 +403,71 @@ namespace Gamification.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Gamification.Core.GameModels.Dailies", b =>
+                {
+                    b.OwnsMany("Gamification.Core.GameModels.ChecklistItem", "DailiesChecklist", b1 =>
+                        {
+                            b1.Property<string>("DailiesId")
+                                .HasColumnType("text");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("IsChecked")
+                                .HasColumnType("boolean");
+
+                            b1.Property<string>("ItemText")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("DailiesId", "__synthesizedOrdinal")
+                                .HasName("pk_dailies");
+
+                            b1.ToTable("tasks");
+
+                            b1.ToJson("dailies_checklist");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DailiesId")
+                                .HasConstraintName("fk_dailies_dailies_dailies_id");
+                        });
+
+                    b.Navigation("DailiesChecklist");
+                });
+
+            modelBuilder.Entity("Gamification.Core.GameModels.Todo", b =>
+                {
+                    b.OwnsMany("Gamification.Core.GameModels.ChecklistItem", "TodoChecklist", b1 =>
+                        {
+                            b1.Property<string>("TodoId")
+                                .HasColumnType("text");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("IsChecked")
+                                .HasColumnType("boolean");
+
+                            b1.Property<string>("ItemText")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("TodoId", "__synthesizedOrdinal");
+
+                            b1.ToTable("tasks");
+
+                            b1.ToJson("todo_checklist");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TodoId")
+                                .HasConstraintName("fk_todos_todos_todo_id");
+                        });
+
+                    b.Navigation("TodoChecklist");
+                });
+
             modelBuilder.Entity("Gamification.Core.Models.AnalysisResult", b =>
                 {
                     b.Navigation("UserSiteVisit");
@@ -286,6 +483,8 @@ namespace Gamification.Infrastructure.Migrations
             modelBuilder.Entity("Gamification.Core.Models.User", b =>
                 {
                     b.Navigation("GameStats");
+
+                    b.Navigation("Tasks");
 
                     b.Navigation("UserSiteVisits");
                 });

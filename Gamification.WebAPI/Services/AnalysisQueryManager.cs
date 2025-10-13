@@ -24,14 +24,13 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
     // Public method to enqueue new analysis queries
     public async Task EnqueueAnalysisQuery(Prompt prompt){
         //When new prompt comes in, it means new site/tab visited. In that case, set the previous site/tab visited as visit ended.
-        if(prompts.Count > 0) prompts.Last().VisitEndTime = DateTime.UtcNow;
         prompts.Add(prompt);
         _logger.LogInformation("Enqueued analysis query for prompt: {PromptKey}", prompt.Title);
     }
 
     // The core execution logic of the background service
     protected override async Task ExecuteAsync(CancellationToken stoppingToken){
-        int batchInterval = 60*1000;
+        int batchInterval = 60*1000*7;
         int minimumPromptLimit = 10;
         while (!stoppingToken.IsCancellationRequested){
             await Task.Delay(batchInterval, stoppingToken);
@@ -71,7 +70,7 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
         return Policy
             .Handle<Exception>() // Handle any exception. Be more specific if you know the types of transient errors.
             .WaitAndRetryAsync(
-                3, // Retry up to 3 times
+                4, // Retry up to 4 times
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(3, retryAttempt)), // Exponential back-off: 2s, 4s, 8s
                 (exception, timeSpan, retryCount, context) => {
                     // Log a warning before each retry attempt

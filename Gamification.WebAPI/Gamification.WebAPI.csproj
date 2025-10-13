@@ -26,5 +26,9 @@
     <ItemGroup>
         <None Update=".env" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Utilities\" />
+    </ItemGroup>
 
 </Project>

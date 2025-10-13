@@ -13,7 +13,7 @@ public class InactivityRecordingService : IInactivityRecordingService{
 
     public void EndVisit(string userId, DateTime? endDate = null){
         UserSiteVisit? lastInsertedItem = _dbContext.UserSiteVisits
-            .Where(u => u.UserId == userId && u.VisitEndDate == null && (u.AnalysisId != null && u.SiteId != null))
+            .Where(u => u.UserId == userId && u.VisitEndDate == null)
             .OrderByDescending(u => u.VisitStartDate)
             .FirstOrDefault();
         if (lastInsertedItem != null) lastInsertedItem.VisitEndDate = endDate ?? DateTime.UtcNow;
