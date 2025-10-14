@@ -3,7 +3,7 @@
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <IntrospectionStateNumber>1225</IntrospectionStateNumber>
+      <IntrospectionStateNumber>1257</IntrospectionStateNumber>
       <ServerVersion>17.5</ServerVersion>
       <StartupTime>1760329699</StartupTime>
       <TimeZones>true ACDT
@@ -806,7 +806,7 @@ false Zulu
 14650||10|C|G
 14650||-9223372036854775808|U|G
 14650||10|U|G</Grants>
-      <IntrospectionStateNumber>1225</IntrospectionStateNumber>
+      <IntrospectionStateNumber>1257</IntrospectionStateNumber>
       <ObjectId>16387</ObjectId>
       <OwnerName>postgres</OwnerName>
     </database>
@@ -4228,8 +4228,8 @@ false Zulu
     <schema id="265" parent="3" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>1225</IntrospectionStateNumber>
-      <LastIntrospectionLocalTimestamp>2025-10-13.08:26:43</LastIntrospectionLocalTimestamp>
+      <IntrospectionStateNumber>1257</IntrospectionStateNumber>
+      <LastIntrospectionLocalTimestamp>2025-10-14.06:36:22</LastIntrospectionLocalTimestamp>
       <ObjectId>2200</ObjectId>
       <StateNumber>532</StateNumber>
       <OwnerName>pg_database_owner</OwnerName>
@@ -4240,51 +4240,63 @@ false Zulu
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
-    <table id="267" parent="265" name="analysis_results">
+    <table id="267" parent="265" name="achievements">
+      <ObjectId>57708</ObjectId>
+      <StateNumber>1256</StateNumber>
+      <AccessMethodId>2</AccessMethodId>
+      <OwnerName>postgres</OwnerName>
+    </table>
+    <table id="268" parent="265" name="analysis_results">
       <ObjectId>16409</ObjectId>
       <StateNumber>1224</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
-    <table id="268" parent="265" name="game_stats">
+    <table id="269" parent="265" name="game_stats">
       <ObjectId>16422</ObjectId>
-      <StateNumber>973</StateNumber>
+      <StateNumber>1256</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
-    <table id="269" parent="265" name="sites">
+    <table id="270" parent="265" name="sites">
       <ObjectId>16393</ObjectId>
       <StateNumber>1224</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
-    <table id="270" parent="265" name="user_site_visits">
+    <table id="271" parent="265" name="user_achievements">
+      <ObjectId>57716</ObjectId>
+      <StateNumber>1256</StateNumber>
+      <AccessMethodId>2</AccessMethodId>
+      <OwnerName>postgres</OwnerName>
+    </table>
+    <table id="272" parent="265" name="user_site_visits">
       <ObjectId>16435</ObjectId>
       <StateNumber>1224</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
-    <table id="271" parent="265" name="users">
+    <table id="273" parent="265" name="users">
       <ObjectId>16401</ObjectId>
       <StateNumber>783</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
-    <column id="272" parent="266" name="migration_id">
+    <column id="274" parent="266" name="migration_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>749</StateNumber>
       <StoredType>varchar(150)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="273" parent="266" name="product_version">
+    <column id="275" parent="266" name="product_version">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>749</StateNumber>
       <StoredType>varchar(32)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <index id="274" parent="266" name="pk___ef_migrations_history">
+    <index id="276" parent="266" name="pk___ef_migrations_history">
       <ColNames>migration_id</ColNames>
       <ObjectId>16391</ObjectId>
       <Primary>1</Primary>
@@ -4295,13 +4307,73 @@ false Zulu
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="275" parent="266" name="pk___ef_migrations_history">
+    <key id="277" parent="266" name="pk___ef_migrations_history">
       <ObjectId>16392</ObjectId>
       <Primary>1</Primary>
       <StateNumber>749</StateNumber>
       <UnderlyingIndexId>16391</UnderlyingIndexId>
     </key>
-    <column id="276" parent="267" name="analysis_id">
+    <column id="278" parent="267" name="achievement_id">
+      <DefaultExpression>gen_random_uuid()</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>1</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="279" parent="267" name="key">
+      <NotNull>1</NotNull>
+      <Position>2</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="280" parent="267" name="reset_time">
+      <NotNull>1</NotNull>
+      <Position>3</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>integer|0s</StoredType>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="281" parent="267" name="image_url">
+      <NotNull>1</NotNull>
+      <Position>4</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="282" parent="267" name="title">
+      <NotNull>1</NotNull>
+      <Position>5</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="283" parent="267" name="description">
+      <NotNull>1</NotNull>
+      <Position>6</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <index id="284" parent="267" name="pk_achievements">
+      <ColNames>achievement_id</ColNames>
+      <ObjectId>57714</ObjectId>
+      <Primary>1</Primary>
+      <StateNumber>1256</StateNumber>
+      <Unique>1</Unique>
+      <AccessMethodId>403</AccessMethodId>
+      <CollationNames>default</CollationNames>
+      <CollationIds>100</CollationIds>
+      <CollationParentNames>pg_catalog</CollationParentNames>
+    </index>
+    <key id="285" parent="267" name="pk_achievements">
+      <ObjectId>57715</ObjectId>
+      <Primary>1</Primary>
+      <StateNumber>1256</StateNumber>
+      <UnderlyingIndexId>57714</UnderlyingIndexId>
+    </key>
+    <column id="286" parent="268" name="analysis_id">
       <DefaultExpression>gen_random_uuid()</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4309,42 +4381,42 @@ false Zulu
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="277" parent="267" name="site_id">
+    <column id="287" parent="268" name="site_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="278" parent="267" name="user_goal">
+    <column id="288" parent="268" name="user_goal">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="279" parent="267" name="category">
+    <column id="289" parent="268" name="category">
       <NotNull>1</NotNull>
       <Position>4</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text[]|0s</StoredType>
       <TypeId>1009</TypeId>
     </column>
-    <column id="280" parent="267" name="intrinsic_score">
+    <column id="290" parent="268" name="intrinsic_score">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StateNumber>750</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
-    <column id="281" parent="267" name="relevance_score">
+    <column id="291" parent="268" name="relevance_score">
       <NotNull>1</NotNull>
       <Position>6</Position>
       <StateNumber>750</StateNumber>
       <StoredType>real|0s</StoredType>
       <TypeId>700</TypeId>
     </column>
-    <foreign-key id="282" parent="267" name="fk_analysis_results_sites_site_id">
+    <foreign-key id="292" parent="268" name="fk_analysis_results_sites_site_id">
       <ColNames>site_id</ColNames>
       <ObjectId>16417</ObjectId>
       <OnDelete>cascade</OnDelete>
@@ -4352,7 +4424,7 @@ false Zulu
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16393</RefTableId>
     </foreign-key>
-    <index id="283" parent="267" name="pk_analysis_results">
+    <index id="293" parent="268" name="pk_analysis_results">
       <ColNames>analysis_id</ColNames>
       <ObjectId>16415</ObjectId>
       <Primary>1</Primary>
@@ -4363,7 +4435,7 @@ false Zulu
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="284" parent="267" name="ix_analysis_results_site_id_user_goal">
+    <index id="294" parent="268" name="ix_analysis_results_site_id_user_goal">
       <ColNames>site_id
 user_goal</ColNames>
       <ObjectId>16458</ObjectId>
@@ -4377,13 +4449,13 @@ default</CollationNames>
       <CollationParentNames>pg_catalog
 pg_catalog</CollationParentNames>
     </index>
-    <key id="285" parent="267" name="pk_analysis_results">
+    <key id="295" parent="268" name="pk_analysis_results">
       <ObjectId>16416</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>
       <UnderlyingIndexId>16415</UnderlyingIndexId>
     </key>
-    <column id="286" parent="268" name="stat_id">
+    <column id="296" parent="269" name="stat_id">
       <DefaultExpression>gen_random_uuid()</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4391,35 +4463,59 @@ pg_catalog</CollationParentNames>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="287" parent="268" name="user_id">
+    <column id="297" parent="269" name="user_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="288" parent="268" name="coin">
+    <column id="298" parent="269" name="coin">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StateNumber>750</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
-    <column id="289" parent="268" name="experience_points">
+    <column id="299" parent="269" name="experience_points">
       <NotNull>1</NotNull>
       <Position>4</Position>
       <StateNumber>750</StateNumber>
       <StoredType>real|0s</StoredType>
       <TypeId>700</TypeId>
     </column>
-    <column id="290" parent="268" name="level">
+    <column id="300" parent="269" name="level">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StateNumber>750</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
-    <foreign-key id="291" parent="268" name="fk_game_stats_users_user_id">
+    <column id="301" parent="269" name="daily_streak_count">
+      <DefaultExpression>0</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>9</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>integer|0s</StoredType>
+      <TypeId>23</TypeId>
+    </column>
+    <column id="302" parent="269" name="productivity_metrics">
+      <DefaultExpression>&apos;{}&apos;::jsonb</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>10</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>jsonb|0s</StoredType>
+      <TypeId>3802</TypeId>
+    </column>
+    <column id="303" parent="269" name="weekly_streak_count">
+      <DefaultExpression>0</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>11</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>integer|0s</StoredType>
+      <TypeId>23</TypeId>
+    </column>
+    <foreign-key id="304" parent="269" name="fk_game_stats_users_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16430</ObjectId>
       <OnDelete>cascade</OnDelete>
@@ -4427,7 +4523,7 @@ pg_catalog</CollationParentNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16401</RefTableId>
     </foreign-key>
-    <index id="292" parent="268" name="pk_game_stats">
+    <index id="305" parent="269" name="pk_game_stats">
       <ColNames>stat_id</ColNames>
       <ObjectId>16428</ObjectId>
       <Primary>1</Primary>
@@ -4438,7 +4534,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="293" parent="268" name="ix_game_stats_user_id">
+    <index id="306" parent="269" name="ix_game_stats_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16459</ObjectId>
       <StateNumber>973</StateNumber>
@@ -4447,13 +4543,13 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="294" parent="268" name="pk_game_stats">
+    <key id="307" parent="269" name="pk_game_stats">
       <ObjectId>16429</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>
       <UnderlyingIndexId>16428</UnderlyingIndexId>
     </key>
-    <column id="295" parent="269" name="site_id">
+    <column id="308" parent="270" name="site_id">
       <DefaultExpression>gen_random_uuid()</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4461,25 +4557,25 @@ pg_catalog</CollationParentNames>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="296" parent="269" name="url">
+    <column id="309" parent="270" name="url">
       <Position>2</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="297" parent="269" name="title">
+    <column id="310" parent="270" name="title">
       <Position>3</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="298" parent="269" name="description">
+    <column id="311" parent="270" name="description">
       <Position>4</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <index id="299" parent="269" name="pk_sites">
+    <index id="312" parent="270" name="pk_sites">
       <ColNames>site_id</ColNames>
       <ObjectId>16399</ObjectId>
       <Primary>1</Primary>
@@ -4490,7 +4586,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="300" parent="269" name="ix_sites_url">
+    <index id="313" parent="270" name="ix_sites_url">
       <ColNames>url</ColNames>
       <ObjectId>16460</ObjectId>
       <StateNumber>1224</StateNumber>
@@ -4500,13 +4596,93 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="301" parent="269" name="pk_sites">
+    <key id="314" parent="270" name="pk_sites">
       <ObjectId>16400</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>
       <UnderlyingIndexId>16399</UnderlyingIndexId>
     </key>
-    <column id="302" parent="270" name="visit_id">
+    <column id="315" parent="271" name="user_achievement_id">
+      <DefaultExpression>gen_random_uuid()</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>1</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="316" parent="271" name="user_id">
+      <NotNull>1</NotNull>
+      <Position>2</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="317" parent="271" name="achievement_id">
+      <NotNull>1</NotNull>
+      <Position>3</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>text|0s</StoredType>
+      <TypeId>25</TypeId>
+    </column>
+    <column id="318" parent="271" name="earned_at">
+      <NotNull>1</NotNull>
+      <Position>4</Position>
+      <StateNumber>1256</StateNumber>
+      <StoredType>timestamp with time zone|0s</StoredType>
+      <TypeId>1184</TypeId>
+    </column>
+    <foreign-key id="319" parent="271" name="fk_user_achievements_users_user_id">
+      <ColNames>user_id</ColNames>
+      <ObjectId>57729</ObjectId>
+      <OnDelete>cascade</OnDelete>
+      <StateNumber>1256</StateNumber>
+      <RefKeyColPositions>1</RefKeyColPositions>
+      <RefTableId>16401</RefTableId>
+    </foreign-key>
+    <foreign-key id="320" parent="271" name="fk_user_achievements_achievements_achievement_id">
+      <ColNames>achievement_id</ColNames>
+      <ObjectId>57724</ObjectId>
+      <OnDelete>cascade</OnDelete>
+      <StateNumber>1256</StateNumber>
+      <RefKeyColPositions>1</RefKeyColPositions>
+      <RefTableId>57708</RefTableId>
+    </foreign-key>
+    <index id="321" parent="271" name="pk_user_achievements">
+      <ColNames>user_achievement_id</ColNames>
+      <ObjectId>57722</ObjectId>
+      <Primary>1</Primary>
+      <StateNumber>1256</StateNumber>
+      <Unique>1</Unique>
+      <AccessMethodId>403</AccessMethodId>
+      <CollationNames>default</CollationNames>
+      <CollationIds>100</CollationIds>
+      <CollationParentNames>pg_catalog</CollationParentNames>
+    </index>
+    <index id="322" parent="271" name="ix_user_achievements_user_id">
+      <ColNames>user_id</ColNames>
+      <ObjectId>57735</ObjectId>
+      <StateNumber>1256</StateNumber>
+      <AccessMethodId>403</AccessMethodId>
+      <CollationNames>default</CollationNames>
+      <CollationIds>100</CollationIds>
+      <CollationParentNames>pg_catalog</CollationParentNames>
+    </index>
+    <index id="323" parent="271" name="ix_user_achievements_achievement_id">
+      <ColNames>achievement_id</ColNames>
+      <ObjectId>57734</ObjectId>
+      <StateNumber>1256</StateNumber>
+      <AccessMethodId>403</AccessMethodId>
+      <CollationNames>default</CollationNames>
+      <CollationIds>100</CollationIds>
+      <CollationParentNames>pg_catalog</CollationParentNames>
+    </index>
+    <key id="324" parent="271" name="pk_user_achievements">
+      <ObjectId>57723</ObjectId>
+      <Primary>1</Primary>
+      <StateNumber>1256</StateNumber>
+      <UnderlyingIndexId>57722</UnderlyingIndexId>
+    </key>
+    <column id="325" parent="272" name="visit_id">
       <DefaultExpression>gen_random_uuid()</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4514,45 +4690,45 @@ pg_catalog</CollationParentNames>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="303" parent="270" name="user_id">
+    <column id="326" parent="272" name="user_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="304" parent="270" name="site_id">
+    <column id="327" parent="272" name="site_id">
       <Position>3</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="305" parent="270" name="analysis_id">
+    <column id="328" parent="272" name="analysis_id">
       <Position>4</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="306" parent="270" name="visit_start_date">
+    <column id="329" parent="272" name="visit_start_date">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StateNumber>799</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <column id="307" parent="270" name="processed_at">
+    <column id="330" parent="272" name="processed_at">
       <Position>6</Position>
       <StateNumber>750</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <column id="308" parent="270" name="visit_end_date">
+    <column id="331" parent="272" name="visit_end_date">
       <Position>7</Position>
       <StateNumber>799</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <foreign-key id="309" parent="270" name="fk_user_site_visits_users_user_id">
+    <foreign-key id="332" parent="272" name="fk_user_site_visits_users_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16453</ObjectId>
       <OnDelete>cascade</OnDelete>
@@ -4560,21 +4736,21 @@ pg_catalog</CollationParentNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16401</RefTableId>
     </foreign-key>
-    <foreign-key id="310" parent="270" name="fk_user_site_visits_sites_site_id">
+    <foreign-key id="333" parent="272" name="fk_user_site_visits_sites_site_id">
       <ColNames>site_id</ColNames>
       <ObjectId>16448</ObjectId>
       <StateNumber>750</StateNumber>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16393</RefTableId>
     </foreign-key>
-    <foreign-key id="311" parent="270" name="fk_user_site_visits_analysis_results_analysis_id">
+    <foreign-key id="334" parent="272" name="fk_user_site_visits_analysis_results_analysis_id">
       <ColNames>analysis_id</ColNames>
       <ObjectId>16443</ObjectId>
       <StateNumber>750</StateNumber>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16409</RefTableId>
     </foreign-key>
-    <index id="312" parent="270" name="pk_user_site_visits">
+    <index id="335" parent="272" name="pk_user_site_visits">
       <ColNames>visit_id</ColNames>
       <ObjectId>16441</ObjectId>
       <Primary>1</Primary>
@@ -4585,7 +4761,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="313" parent="270" name="ix_user_site_visits_user_id">
+    <index id="336" parent="272" name="ix_user_site_visits_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>16464</ObjectId>
       <StateNumber>1224</StateNumber>
@@ -4594,7 +4770,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="314" parent="270" name="ix_user_site_visits_site_id">
+    <index id="337" parent="272" name="ix_user_site_visits_site_id">
       <ColNames>site_id</ColNames>
       <ObjectId>16463</ObjectId>
       <StateNumber>1224</StateNumber>
@@ -4603,7 +4779,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="315" parent="270" name="ix_user_site_visits_analysis_id">
+    <index id="338" parent="272" name="ix_user_site_visits_analysis_id">
       <ColNames>analysis_id</ColNames>
       <ObjectId>16461</ObjectId>
       <StateNumber>1224</StateNumber>
@@ -4612,26 +4788,26 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="316" parent="270" name="ix_user_site_visits_visit_start_date">
+    <index id="339" parent="272" name="ix_user_site_visits_visit_start_date">
       <ColNames>visit_start_date</ColNames>
       <ObjectId>16465</ObjectId>
       <StateNumber>1224</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="317" parent="270" name="ix_user_site_visits_processed_at">
+    <index id="340" parent="272" name="ix_user_site_visits_processed_at">
       <ColNames>processed_at</ColNames>
       <Condition>(processed_at IS NULL)</Condition>
       <ObjectId>16462</ObjectId>
       <StateNumber>1224</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="318" parent="270" name="pk_user_site_visits">
+    <key id="341" parent="272" name="pk_user_site_visits">
       <ObjectId>16442</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>
       <UnderlyingIndexId>16441</UnderlyingIndexId>
     </key>
-    <column id="319" parent="271" name="user_id">
+    <column id="342" parent="273" name="user_id">
       <DefaultExpression>gen_random_uuid()</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4639,31 +4815,31 @@ pg_catalog</CollationParentNames>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="320" parent="271" name="username">
+    <column id="343" parent="273" name="username">
       <Position>2</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="321" parent="271" name="email">
+    <column id="344" parent="273" name="email">
       <Position>3</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="322" parent="271" name="password">
+    <column id="345" parent="273" name="password">
       <Position>4</Position>
       <StateNumber>750</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="323" parent="271" name="goal">
+    <column id="346" parent="273" name="goal">
       <Position>5</Position>
       <StateNumber>783</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <index id="324" parent="271" name="pk_users">
+    <index id="347" parent="273" name="pk_users">
       <ColNames>user_id</ColNames>
       <ObjectId>16407</ObjectId>
       <Primary>1</Primary>
@@ -4674,7 +4850,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="325" parent="271" name="ix_users_username">
+    <index id="348" parent="273" name="ix_users_username">
       <ColNames>username</ColNames>
       <ObjectId>16504</ObjectId>
       <StateNumber>781</StateNumber>
@@ -4684,7 +4860,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="326" parent="271" name="ix_users_email">
+    <index id="349" parent="273" name="ix_users_email">
       <ColNames>email</ColNames>
       <ObjectId>16503</ObjectId>
       <StateNumber>781</StateNumber>
@@ -4694,7 +4870,7 @@ pg_catalog</CollationParentNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="327" parent="271" name="pk_users">
+    <key id="350" parent="273" name="pk_users">
       <ObjectId>16408</ObjectId>
       <Primary>1</Primary>
       <StateNumber>750</StateNumber>

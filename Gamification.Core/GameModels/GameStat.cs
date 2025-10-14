@@ -3,13 +3,6 @@ using Gamification.Core.Models;
 namespace Gamification.Core.GameModels;
 
 public class GameStat{
-    public enum TimeFrequency{
-        Daily,
-        Weekly,
-        Monthly,
-        Yearly,
-        Lifetime // Permanenet or lifetime
-    }
     public string StatId { get; set; }
     
     public string UserId { get; set; }
@@ -19,6 +12,15 @@ public class GameStat{
     public float ExperiencePoints{ get; set; }
     public int Level{ get; set; }
     
-    // public Dictionary<TimeFrequency, TimeSpan> TimeSpent{ get; set; }
-    // public int DailyStreakCount{ get; set; }
+    public Dictionary<TimeFrequency, TimeSpan> ProductivityMetrics{ get; set; }
+    public int DailyStreakCount{ get; set; } //If user is able to be productive for a given amount per day, this streak goes up
+    public int WeeklyStreakCount{ get; set; }
+    
+    public enum TimeFrequency{
+        Daily,
+        Weekly,
+        Monthly,
+        Yearly,
+        Lifetime // Permanenet or lifetime
+    }
 }

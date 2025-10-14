@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Gamification.Core.Models;
 using Gamification.Core.GameModels;
 
@@ -10,6 +11,8 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
     public DbSet<UserSiteVisit> UserSiteVisits{ get; set; }
     public DbSet<User> Users{ get; set; }
     public DbSet<GameStat> GameStats{ get; set; }
+    public DbSet<Achievement> Achievements{ get; set; }
+    public DbSet<UserAchievement> UserAchievements{ get; set; }
 
     //Defines the schema constraints, namings etc
     protected override void OnModelCreating(ModelBuilder modelBuilder){
@@ -18,6 +21,7 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         SetupAnalysisResultsTable(modelBuilder);
         SetupUserSiteVisitsTable(modelBuilder);
         SetupGameStatsTable(modelBuilder);
+        SetupAchievementTable(modelBuilder);
     }
 
     void SetupUsersTable(ModelBuilder modelBuilder){
@@ -88,10 +92,39 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         entity.HasKey(gs => gs.StatId);
         entity.Property(gs=>gs.StatId).HasDefaultValueSql("gen_random_uuid()");
         
+        entity.Property(gs => gs.ProductivityMetrics)
+            .HasConversion(
+                data => JsonSerializer.Serialize(data, (JsonSerializerOptions)null),
+                data => JsonSerializer.Deserialize<Dictionary<GameStat.TimeFrequency, TimeSpan>>(data, (JsonSerializerOptions)null)
+                )
+            .HasColumnType("jsonb");
+        
         entity
             .HasOne(gs => gs.User)
             .WithMany(u => u.GameStats)
             .HasForeignKey(gs => gs.UserId);
+    }
+
+    void SetupAchievementTable(ModelBuilder modelBuilder){
+        var userAchievement = modelBuilder.Entity<UserAchievement>();
+        userAchievement.HasKey(ua => ua.UserAchievementId);
+        userAchievement.Property(ua => ua.UserAchievementId)
+            .HasDefaultValueSql("gen_random_uuid()");
+
+        userAchievement
+            .HasOne(ua => ua.User)
+            .WithMany(u => u.UserAchievements)
+            .HasForeignKey(ua => ua.UserId);
+
+        userAchievement
+            .HasOne(ua => ua.Achievement)
+            .WithMany(a => a.AchievedUsers)
+            .HasForeignKey(ua => ua.AchievementId);
+
+        var achievementTable = modelBuilder.Entity<Achievement>();
+        achievementTable.HasKey(a => a.AchievementId);
+        achievementTable.Property(a => a.AchievementId)
+            .HasDefaultValueSql("gen_random_uuid()");
     }
 
     public AnalysisResult? GetAnalysisOfSite(string siteId, string userId){
