@@ -11,8 +11,14 @@ public class GameStat{
     public int Coin{ get; set; }
     public float ExperiencePoints{ get; set; }
     public int Level{ get; set; }
-    
-    public Dictionary<TimeFrequency, TimeSpan> ProductivityMetrics{ get; set; }
+
+    public Dictionary<TimeFrequency, TimeSpan> ProductivityMetrics{ get; set; } = new Dictionary<TimeFrequency, TimeSpan>{
+        {TimeFrequency.Daily, TimeSpan.Zero},
+        {TimeFrequency.Weekly, TimeSpan.Zero},
+        {TimeFrequency.Monthly, TimeSpan.Zero},
+        {TimeFrequency.Yearly, TimeSpan.Zero},
+        {TimeFrequency.Lifetime, TimeSpan.Zero}
+    };
     public int DailyStreakCount{ get; set; } //If user is able to be productive for a given amount per day, this streak goes up
     public int WeeklyStreakCount{ get; set; }
     

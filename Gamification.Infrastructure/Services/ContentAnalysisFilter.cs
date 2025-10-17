@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Gamification.Infrastructure.Services;
 
@@ -11,11 +12,13 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
     
     private readonly dynamic _classifier;
     private readonly IConfiguration _config;
+    private readonly ILogger<ContentAnalysisFilter> _logger;
     
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern IntPtr LoadLibrary(string libname);
 
-    public ContentAnalysisFilter(IConfiguration config){
+    public ContentAnalysisFilter(IConfiguration config, ILogger<ContentAnalysisFilter> logger){
+        _logger = logger;
         return;
         _config = config;
         // Set configuration before initializing
@@ -35,9 +38,9 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
             dynamic classifierModule = Py.Import("classifier");
             var modelPath = Path.Join(_config.GetValue<string>("PythonPath:Script"), "models");
         
-            Console.WriteLine("Loading ML model into memory...");
+            _logger.LogInformation("Loading ML model into memory...");
             _classifier = classifierModule.Classifier(modelPath);
-            Console.WriteLine("ML model loaded. ContentAnalysisFilter is ready.");
+            _logger.LogInformation("ML model loaded. ContentAnalysisFilter is ready.");
         }
         
 
@@ -50,11 +53,11 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
     public bool IsAnalysisRequired(string content){
         if (string.IsNullOrEmpty(content)) return true;
         if (RunInference(content) == 0){
-            Console.WriteLine("No need to perform analysis. Content is clearly unproductive");
+            _logger.LogInformation("No need to perform analysis. Content is clearly unproductive");
             return false;
         }
         else{
-            Console.WriteLine("Content may be productive. Perform analysis");
+            _logger.LogInformation("Content may be productive. Perform analysis");
             return true;
         }
     }
@@ -68,7 +71,7 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
                 return result.As<int>();
             }
             catch (PythonException ex){
-                Console.WriteLine($"--- Python Exception during inference: {ex.Message} ---");
+                _logger.LogError("--- Python Exception during inference: {ErrorMessage} ---", ex.Message);
                 // Decide on a safe default. Returning 1 (analyze) is often safer than 0(don't analyze).
                 return 1;
             }
@@ -78,31 +81,31 @@ public class ContentAnalysisFilter : IContentAnalysisFilter, IDisposable{
     public void Dispose(){
         if (!PythonEngine.IsInitialized) return;
         using (Py.GIL()){
-            Console.WriteLine("Disposing Python resources...");
+            _logger.LogInformation("Disposing Python resources...");
 
             // 1. Explicitly dispose the classifier object.
             try{
                 if (_classifier is IDisposable disposableClassifier){
                     disposableClassifier.Dispose();
-                    Console.WriteLine("Classifier object disposed.");
+                    _logger.LogInformation("Classifier object disposed.");
                 }
             }
             catch (Exception ex){
-                Console.WriteLine($"Error disposing classifier object: {ex.Message}");
+                _logger.LogError("Error disposing classifier object: {ErrorMessage}", ex.Message);
             }
 
             // 2. (Optional but Recommended) Trigger Python's garbage collector.
             try{
                 dynamic gc = Py.Import("gc");
                 gc.collect();
-                Console.WriteLine("Python garbage collection triggered.");
+                _logger.LogInformation("Python garbage collection triggered.");
             }
             catch (PythonException ex){
-                Console.WriteLine($"Error during Python GC: {ex.Message}");
+                _logger.LogError("Error during Python GC: {ErrorMessage}", ex.Message);
             }
 
             // 3. Finally, shut down the Python engine.
-            Console.WriteLine("Shutting down Python Engine");
+            _logger.LogInformation("Shutting down Python Engine");
             //Don't need to run PythonEngine.Shutdown() as on application exit, it will automatically be handled.
             // PythonEngine.Shutdown();
         }

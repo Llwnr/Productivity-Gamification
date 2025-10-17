@@ -1,5 +1,7 @@
 using System.Text;
+using System.Threading.Channels;
 using Gamification.Core.Interfaces;
+using Gamification.Infrastructure.ChannelData;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Externals;
 using Gamification.Infrastructure.Interfaces;
@@ -11,6 +13,9 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 // Add services to the container.
@@ -20,18 +25,24 @@ builder.Services.AddDbContextPool<ProductivityDbContext>(option =>
 
 builder.Services.AddScoped<GoogleApi>();
 
-builder.Services.AddScoped<IScoreProcessingService, ScoreProcessingService>();
 builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
 builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
 builder.Services.AddScoped<IActivityRecorder, ActivityRecorder>();
+builder.Services.AddScoped<IActivityProcessingService, ActivityProcessingService>();
 
 builder.Services.AddSingleton<AnalysisQueryManager>();
-builder.Services.AddSingleton<IAnalysisQueryManager>(provider => 
-    provider.GetRequiredService<AnalysisQueryManager>());
-builder.Services.AddHostedService(provider => 
-    provider.GetRequiredService<AnalysisQueryManager>());
+builder.Services.AddSingleton<IAnalysisQueryManager>(
+    sp => sp.GetRequiredService<AnalysisQueryManager>());
+builder.Services.AddHostedService<AnalysisQueryManager>(
+    sp => sp.GetRequiredService<AnalysisQueryManager>());
+
+builder.Services.AddHostedService<ScheduledProcessingService>();
 
 builder.Services.AddSingleton<IContentAnalysisFilter, ContentAnalysisFilter>();
+builder.Services.AddSingleton<Channel<AchievementMessage>>(
+    _ => Channel.CreateUnbounded<AchievementMessage>());
+
+builder.Services.AddHostedService<AchievementManager>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
@@ -89,12 +100,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-using (var scope = app.Services.CreateScope()){
-    var services = scope.ServiceProvider;
-    Console.WriteLine("Loading score processing service...");
-    services.GetRequiredService<IScoreProcessingService>();
-}
 
 app.Run();
 

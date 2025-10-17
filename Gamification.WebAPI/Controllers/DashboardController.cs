@@ -4,6 +4,7 @@ using Gamification.Infrastructure.DatabaseService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Gamification.WebAPI.Controllers;
 
@@ -11,18 +12,20 @@ namespace Gamification.WebAPI.Controllers;
 [Route("[controller]")]
 public class DashboardController : ControllerBase{
     private readonly ProductivityDbContext _dbContext;
+    private readonly ILogger<DashboardController> _logger;
     
     // public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     public string? UserId => "4420f420-2f98-4cac-a1ab-578c3c2d4b19";
 
-    public DashboardController(ProductivityDbContext dbContext){
+    public DashboardController(ProductivityDbContext dbContext, ILogger<DashboardController> logger){
         _dbContext = dbContext;
+        _logger = logger;
     }
     
     [Authorize]
     [HttpGet("UserStat")]
     public IActionResult SendUserStat(){
-        Console.WriteLine("Sent user's stats");
+        _logger.LogInformation("Sent user's stats");
         return Ok(_dbContext.GameStats.Where(u => u.UserId == UserId));
     }
     
@@ -52,7 +55,7 @@ public class DashboardController : ControllerBase{
             }
         }
 
-        Console.WriteLine(siteVisitDtos[0].BaseProductiveScore);
+        _logger.LogInformation("{Score}", siteVisitDtos[0].BaseProductiveScore);
         return Ok(siteVisitDtos);
     }
 }

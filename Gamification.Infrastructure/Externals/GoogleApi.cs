@@ -3,18 +3,21 @@ using GenerativeAI;
 using Gamification.Core.Models;
 using DotNetEnv;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Gamification.Infrastructure.Externals;
 
 public class GoogleApi{
     private readonly GoogleAi? _googleAi;
+    private readonly ILogger<GoogleApi> _logger;
 
-    public GoogleApi(){
+    public GoogleApi(ILogger<GoogleApi> logger){
+        _logger = logger;
         Env.Load();
         string apiKey = Env.GetString("GEMINI_API_KEY");
         if (string.IsNullOrEmpty(apiKey))
         {
-            Console.WriteLine("Please set the google api key environment variable.");
+            _logger.LogWarning("Please set the google api key environment variable.");
             return;
         }
         
@@ -23,7 +26,7 @@ public class GoogleApi{
 
     public async Task<SiteAnalysisList?> Generate(List<Prompt> prompts){
         if (_googleAi == null){
-            Console.WriteLine("Google AI Api is not set up");
+            _logger.LogWarning("Google AI Api is not set up");
             return null;
         }
 
@@ -32,7 +35,7 @@ public class GoogleApi{
             combinedPromptBuilder.Append($"\nVisit {i+1}:" + prompts[i]);
         }
         string combinedPrompt = combinedPromptBuilder.ToString();
-        Console.WriteLine($"Processing prompts: \n {combinedPrompt}");
+        _logger.LogInformation($"Processing prompts: \n {combinedPrompt}");
         
         var model = _googleAi.CreateGenerativeModel(GoogleAIModels.Gemini25FlashLite);
 

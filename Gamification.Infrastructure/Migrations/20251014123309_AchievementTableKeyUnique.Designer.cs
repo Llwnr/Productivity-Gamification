@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Gamification.Infrastructure.DatabaseService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    partial class ProductivityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251014123309_AchievementTableKeyUnique")]
+    partial class AchievementTableKeyUnique
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,7 +110,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasName("pk_game_stats");
 
                     b.HasIndex("UserId")
-                        .IsUnique()
                         .HasDatabaseName("ix_game_stats_user_id");
 
                     b.ToTable("game_stats", (string)null);
@@ -226,10 +228,6 @@ namespace Gamification.Infrastructure.Migrations
                         .HasColumnName("user_id")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<TimeSpan>("DailyTargetHours")
-                        .HasColumnType("interval")
-                        .HasColumnName("daily_target_hours");
-
                     b.Property<string>("Email")
                         .HasColumnType("text")
                         .HasColumnName("email");
@@ -318,8 +316,8 @@ namespace Gamification.Infrastructure.Migrations
             modelBuilder.Entity("Gamification.Core.GameModels.GameStat", b =>
                 {
                     b.HasOne("Gamification.Core.Models.User", "User")
-                        .WithOne("GameStat")
-                        .HasForeignKey("Gamification.Core.GameModels.GameStat", "UserId")
+                        .WithMany("GameStats")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_game_stats_users_user_id");
@@ -405,8 +403,7 @@ namespace Gamification.Infrastructure.Migrations
 
             modelBuilder.Entity("Gamification.Core.Models.User", b =>
                 {
-                    b.Navigation("GameStat")
-                        .IsRequired();
+                    b.Navigation("GameStats");
 
                     b.Navigation("UserAchievements");
 

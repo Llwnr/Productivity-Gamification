@@ -32,6 +32,11 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
 
         entity.HasIndex(u => u.Username).IsUnique();
         entity.HasIndex(u => u.Email).IsUnique();
+
+        entity
+            .HasOne(u => u.GameStat)
+            .WithOne(gameStat => gameStat.User)
+            .HasForeignKey<GameStat>(gameStat => gameStat.UserId);
     }
 
     void SetupSitesTable(ModelBuilder modelBuilder){
@@ -98,11 +103,6 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
                 data => JsonSerializer.Deserialize<Dictionary<GameStat.TimeFrequency, TimeSpan>>(data, (JsonSerializerOptions)null)
                 )
             .HasColumnType("jsonb");
-        
-        entity
-            .HasOne(gs => gs.User)
-            .WithMany(u => u.GameStats)
-            .HasForeignKey(gs => gs.UserId);
     }
 
     void SetupAchievementTable(ModelBuilder modelBuilder){
@@ -125,10 +125,14 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         achievementTable.HasKey(a => a.AchievementId);
         achievementTable.Property(a => a.AchievementId)
             .HasDefaultValueSql("gen_random_uuid()");
+
+        achievementTable
+            .HasIndex(a => a.Key)
+            .IsUnique();
     }
 
     public AnalysisResult? GetAnalysisOfSite(string siteId, string userId){
-        string userGoal = Users.FirstOrDefault(u => u.UserId == userId).Goal;
+        string userGoal = Users.FirstOrDefault(u => u.UserId == userId)?.Goal ?? throw new Exception("User not found");
         return AnalysisResults.FirstOrDefault(s => s.SiteId == siteId && s.UserGoal == userGoal);
     }
 }

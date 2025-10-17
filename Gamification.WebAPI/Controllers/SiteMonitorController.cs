@@ -1,13 +1,16 @@
 using System.Security.Claims;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc;
 using Gamification.Infrastructure.Externals;
 using Gamification.Core.Models;
 using Gamification.Core.Interfaces;
+using Gamification.Infrastructure.ChannelData;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Interfaces;
 using Gamification.Infrastructure.Services;
 using Gamification.WebAPI.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 
 namespace Gamification.WebAPI.Controllers;
 
@@ -17,16 +20,22 @@ public class SiteMonitorController : ControllerBase{
     private readonly IAnalysisQueryManager _analysisQueryManager;
     private readonly IInactivityRecordingService _inactivityRecordingService;
     private readonly IActivityRecorder _activityRecorder;
+    private readonly ILogger<SiteMonitorController> _logger;
+    private readonly Channel<AchievementMessage> _channel;
     
     private string? GetAuthorizedUserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     
     public SiteMonitorController(
         IAnalysisQueryManager analysisQueryManager, 
         IInactivityRecordingService inactivityRecordingService,
-        IActivityRecorder activityRecorder){
+        IActivityRecorder activityRecorder,
+        ILogger<SiteMonitorController> logger,
+        Channel<AchievementMessage> channel){
         _analysisQueryManager = analysisQueryManager;
         _inactivityRecordingService = inactivityRecordingService;
         _activityRecorder = activityRecorder;
+        _logger = logger;
+        _channel = channel;
     }
     
     /// <summary>
@@ -35,7 +44,7 @@ public class SiteMonitorController : ControllerBase{
     // [Authorize]
     [HttpPost("AnalyzeSite")]
     public IActionResult AnalyzeSite([FromBody] SiteVisitDTO siteVisitDetails){
-        Console.WriteLine("Received request to analyze site.");
+        _logger.LogInformation("Received request to analyze site.");
         Prompt prompt = new Prompt{
             Url = siteVisitDetails.Url,
             Title = siteVisitDetails.Title,
@@ -67,7 +76,7 @@ public class SiteMonitorController : ControllerBase{
             if (DateTime.TryParse(lastActiveTimeStr, out var lastActiveTime)){
                 lastActiveTime = lastActiveTime.ToUniversalTime();
                 _inactivityRecordingService.RecordAsInactive(GetAuthorizedUserId, lastActiveTime);
-                Console.WriteLine("Last active datetime: " + lastActiveTime);
+                _logger.LogInformation("Last active datetime: {LastActiveTime}", lastActiveTime);
                 return;
             }
             Console.Error.WriteLine("Failed to parse time.");
@@ -82,6 +91,11 @@ public class SiteMonitorController : ControllerBase{
 
     [HttpGet("Talk")]
     public void LogRandom(string msg){
-        Console.WriteLine(msg);
+        _logger.LogInformation(msg);
+    }
+
+    [HttpGet("MessageChannel")]
+    public void WriteMessage(){
+        _channel.Writer.WriteAsync(new AchievementMessage("Yoooooooooo"));
     }
 }

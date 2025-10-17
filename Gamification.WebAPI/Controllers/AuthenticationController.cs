@@ -7,6 +7,7 @@ using Gamification.WebAPI.Models;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
@@ -17,10 +18,12 @@ namespace Gamification.WebAPI.Controllers;
 public class AuthenticationController : ControllerBase{
     private readonly IConfiguration _config;
     private readonly ProductivityDbContext _dbContext;
+    private readonly ILogger<AuthenticationController> _logger;
     
-    public AuthenticationController(IConfiguration configuration, ProductivityDbContext dbContext){
+    public AuthenticationController(IConfiguration configuration, ProductivityDbContext dbContext, ILogger<AuthenticationController> logger){
         _config = configuration;
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [Authorize]
@@ -35,7 +38,7 @@ public class AuthenticationController : ControllerBase{
             .FirstOrDefault(u => user.Username == u.Username || user.Username == u.Email);
         if (registeredUser != null && BCrypt.Net.BCrypt.Verify(user.Password, registeredUser.Password)){
             var token = GenerateJwtToken(registeredUser.UserId);
-            Console.WriteLine($"Token for {user.Username} has been generated");
+            _logger.LogInformation("Token for {Username} has been generated", user.Username);
             
             Response.Cookies.Append(
                 "authToken",
@@ -50,7 +53,7 @@ public class AuthenticationController : ControllerBase{
             
             return Ok(new {message = "Login Successful!"});
         }
-        Console.WriteLine("Token not generated");
+        _logger.LogInformation("Token not generated");
         return Unauthorized(new {message = "Invalid credentials"});
     }
     
@@ -68,7 +71,7 @@ public class AuthenticationController : ControllerBase{
                 IsEssential = true
             });
 
-        Console.WriteLine("Logged out!");
+        _logger.LogInformation("Logged out!");
         return Ok(new{ message = "Logged out successfully!" });
     }
 
@@ -84,7 +87,7 @@ public class AuthenticationController : ControllerBase{
         _dbContext.Users.Add(user);
         _dbContext.SaveChanges();
 
-        Console.WriteLine($"User password: {newUser.Password}, saved as : {user.Password}");
+        _logger.LogInformation("User password: {Password}, saved as : {HashedPassword}", newUser.Password, user.Password);
         
         return Ok("Registered");
         

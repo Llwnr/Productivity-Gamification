@@ -26,7 +26,7 @@ function checkInactivity(){
 
     function resetTimer(){
         clearTimeout(time);
-        time = setTimeout(userIsInactive, 1000*60*10);
+        time = setTimeout(userIsInactive, 1000*60*3);
     }
 
     function userIsInactive(){
