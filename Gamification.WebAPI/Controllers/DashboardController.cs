@@ -15,7 +15,7 @@ public class DashboardController : ControllerBase{
     private readonly ILogger<DashboardController> _logger;
     
     // public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    public string? UserId => "4420f420-2f98-4cac-a1ab-578c3c2d4b19";
+    public string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
     public DashboardController(ProductivityDbContext dbContext, ILogger<DashboardController> logger){
         _dbContext = dbContext;

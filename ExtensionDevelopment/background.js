@@ -82,7 +82,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   }
 
   if(message.type === 'user_afk'){
-	notifyBrowsingStopped();
-	sendMessage("User is afk");
+  	sendMessage("User is afk, so notifying the end of site visit");
+  	notifyBrowsingStopped();
   }
 });

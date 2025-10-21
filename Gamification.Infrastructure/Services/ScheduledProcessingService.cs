@@ -16,11 +16,11 @@ public class ScheduledProcessingService : BackgroundService{
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken){
         while (!stoppingToken.IsCancellationRequested){
-            await Task.Delay(1000*60*10, stoppingToken);
+            await Task.Delay(1000*10, stoppingToken);
             using (var scope = _scopeFactory.CreateScope()){
                 IActivityProcessingService  activityProcessingService = scope.ServiceProvider.GetRequiredService<IActivityProcessingService>();
                 _logger.LogInformation("Processing score...");
-                await activityProcessingService.ProcessUserActivityAsync("4420f420-2f98-4cac-a1ab-578c3c2d4b19");
+                await activityProcessingService.ProcessUserActivityAsync();
             }
         }
     }

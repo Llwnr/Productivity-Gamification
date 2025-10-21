@@ -3,9 +3,9 @@
   <database-model serializer="dbm" dbms="POSTGRES" family-id="POSTGRES" format-version="4.53">
     <root id="1">
       <DateStyle>mdy</DateStyle>
-      <IntrospectionStateNumber>1724</IntrospectionStateNumber>
+      <IntrospectionStateNumber>1760</IntrospectionStateNumber>
       <ServerVersion>17.5</ServerVersion>
-      <StartupTime>1760670417</StartupTime>
+      <StartupTime>1761014387</StartupTime>
       <TimeZones>true ACDT
 true ACSST
 false ACST
@@ -806,7 +806,7 @@ false Zulu
 14650||10|C|G
 14650||-9223372036854775808|U|G
 14650||10|U|G</Grants>
-      <IntrospectionStateNumber>1724</IntrospectionStateNumber>
+      <IntrospectionStateNumber>1760</IntrospectionStateNumber>
       <ObjectId>16387</ObjectId>
       <OwnerName>postgres</OwnerName>
     </database>
@@ -4228,8 +4228,8 @@ false Zulu
     <schema id="265" parent="3" name="public">
       <Comment>standard public schema</Comment>
       <Current>1</Current>
-      <IntrospectionStateNumber>1724</IntrospectionStateNumber>
-      <LastIntrospectionLocalTimestamp>2025-10-17.09:46:44</LastIntrospectionLocalTimestamp>
+      <IntrospectionStateNumber>1760</IntrospectionStateNumber>
+      <LastIntrospectionLocalTimestamp>2025-10-21.03:06:03</LastIntrospectionLocalTimestamp>
       <ObjectId>2200</ObjectId>
       <StateNumber>532</StateNumber>
       <OwnerName>pg_database_owner</OwnerName>
@@ -4242,7 +4242,7 @@ false Zulu
     </table>
     <table id="267" parent="265" name="achievements">
       <ObjectId>57708</ObjectId>
-      <StateNumber>1256</StateNumber>
+      <StateNumber>1759</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4254,7 +4254,7 @@ false Zulu
     </table>
     <table id="269" parent="265" name="game_stats">
       <ObjectId>16422</ObjectId>
-      <StateNumber>1723</StateNumber>
+      <StateNumber>1740</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4266,7 +4266,7 @@ false Zulu
     </table>
     <table id="271" parent="265" name="user_achievements">
       <ObjectId>57716</ObjectId>
-      <StateNumber>1256</StateNumber>
+      <StateNumber>1759</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>postgres</OwnerName>
     </table>
@@ -4360,7 +4360,7 @@ false Zulu
       <ColNames>achievement_id</ColNames>
       <ObjectId>57714</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>1256</StateNumber>
+      <StateNumber>1759</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4370,7 +4370,7 @@ false Zulu
     <index id="285" parent="267" name="ix_achievements_key">
       <ColNames>key</ColNames>
       <ObjectId>57736</ObjectId>
-      <StateNumber>1258</StateNumber>
+      <StateNumber>1759</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4537,7 +4537,7 @@ pg_catalog</CollationParentNames>
       <ColNames>stat_id</ColNames>
       <ObjectId>16428</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>1723</StateNumber>
+      <StateNumber>1740</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4547,7 +4547,7 @@ pg_catalog</CollationParentNames>
     <index id="307" parent="269" name="ix_game_stats_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>57738</ObjectId>
-      <StateNumber>1723</StateNumber>
+      <StateNumber>1740</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4662,7 +4662,7 @@ pg_catalog</CollationParentNames>
       <ColNames>user_achievement_id</ColNames>
       <ObjectId>57722</ObjectId>
       <Primary>1</Primary>
-      <StateNumber>1256</StateNumber>
+      <StateNumber>1759</StateNumber>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
@@ -4672,7 +4672,7 @@ pg_catalog</CollationParentNames>
     <index id="323" parent="271" name="ix_user_achievements_user_id">
       <ColNames>user_id</ColNames>
       <ObjectId>57735</ObjectId>
-      <StateNumber>1256</StateNumber>
+      <StateNumber>1759</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>
@@ -4681,7 +4681,7 @@ pg_catalog</CollationParentNames>
     <index id="324" parent="271" name="ix_user_achievements_achievement_id">
       <ColNames>achievement_id</ColNames>
       <ObjectId>57734</ObjectId>
-      <StateNumber>1256</StateNumber>
+      <StateNumber>1759</StateNumber>
       <AccessMethodId>403</AccessMethodId>
       <CollationNames>default</CollationNames>
       <CollationIds>100</CollationIds>

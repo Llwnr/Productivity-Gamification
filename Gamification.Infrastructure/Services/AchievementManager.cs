@@ -1,14 +1,15 @@
 using System.Threading.Channels;
-using Gamification.Infrastructure.ChannelData;
+using Gamification.Infrastructure.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Gamification.Infrastructure.Services;
 
 public class AchievementManager : BackgroundService{
-    private readonly Channel<AchievementMessage> _channel;
+    private readonly Channel<GameEvent> _channel;
     private ILogger<AchievementManager> _logger;
-    public AchievementManager(Channel<AchievementMessage> channel, ILogger<AchievementManager> logger){
+    
+    public AchievementManager(Channel<GameEvent> channel, ILogger<AchievementManager> logger){
         _channel = channel;
         _logger = logger;
     }
@@ -16,7 +17,9 @@ public class AchievementManager : BackgroundService{
     protected override async Task ExecuteAsync(CancellationToken stoppingToken){
         while (await _channel.Reader.WaitToReadAsync(stoppingToken)){
             var request = await _channel.Reader.ReadAsync(stoppingToken);
-            _logger.LogInformation("Received message: "  + request.Message);
+            if (request is ExpGainedEvent req){
+                _logger.LogInformation($"Exp Event triggered. User {req.UserId} gained {req.GainedExp}. Total exp is now {req.TotalExp}");
+            }
         }
     }
 }

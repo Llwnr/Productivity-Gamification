@@ -1,7 +1,8 @@
 using System.Text;
 using System.Threading.Channels;
+using Gamification.Core.GameModels;
 using Gamification.Core.Interfaces;
-using Gamification.Infrastructure.ChannelData;
+using Gamification.Infrastructure.Events;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.Infrastructure.Externals;
 using Gamification.Infrastructure.Interfaces;
@@ -39,8 +40,8 @@ builder.Services.AddHostedService<AnalysisQueryManager>(
 builder.Services.AddHostedService<ScheduledProcessingService>();
 
 builder.Services.AddSingleton<IContentAnalysisFilter, ContentAnalysisFilter>();
-builder.Services.AddSingleton<Channel<AchievementMessage>>(
-    _ => Channel.CreateUnbounded<AchievementMessage>());
+builder.Services.AddSingleton<Channel<GameEvent>>(
+    _ => Channel.CreateUnbounded<GameEvent>());
 
 builder.Services.AddHostedService<AchievementManager>();
 
@@ -80,11 +81,24 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// using (var scope = app.Services.CreateScope()){
-//     var services = scope.ServiceProvider;
-//     Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
-//     services.GetRequiredService<IContentAnalysisFilter>();
-// }
+using (var scope = app.Services.CreateScope()){
+    var services = scope.ServiceProvider;
+    // Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
+    // services.GetRequiredService<IContentAnalysisFilter>();
+
+    Console.WriteLine("Adding achievements");
+    var dbContext = services.GetRequiredService<ProductivityDbContext>();
+    try{
+        if (!dbContext.Achievements.Any()){
+            dbContext.Achievements.AddRange(
+                AchievementDefinition.GetAchievementDefinitions());
+            dbContext.SaveChanges();
+        }
+    }
+    catch (Exception ex){
+        Console.WriteLine("Exception when adding achievement definitions: " + ex.Message);
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()){

@@ -6,6 +6,4 @@ namespace Gamification.Core.Interfaces;
 /// </summary>
 public interface IInactivityRecordingService{
     public void EndVisit(string userId, DateTime? endDate = null);
-    public void RecordAsInactive(string userId);
-    public void RecordAsInactive(string userId, DateTime lastActiveTime);
 }

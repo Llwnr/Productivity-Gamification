@@ -12,45 +12,12 @@ public class InactivityRecordingService : IInactivityRecordingService{
     }
 
     public void EndVisit(string userId, DateTime? endDate = null){
+        if (AlreadyRecordedInactive()) return;
         UserSiteVisit? lastInsertedItem = _dbContext.UserSiteVisits
             .Where(u => u.UserId == userId && u.VisitEndDate == null)
             .OrderByDescending(u => u.VisitStartDate)
             .FirstOrDefault();
         if (lastInsertedItem != null) lastInsertedItem.VisitEndDate = endDate ?? DateTime.UtcNow;
-        _dbContext.SaveChanges();
-    }
-    
-    public void RecordAsInactive(string userId){
-        if (AlreadyRecordedInactive()){
-            // Console.WriteLine("User is already recorded as inactive");
-            return;
-        }
-        EndVisit(userId);
-        return;
-        
-        UserSiteVisit newActivity = new UserSiteVisit{
-            UserId = userId,
-            VisitStartDate = DateTime.UtcNow,
-        };
-
-        _dbContext.Add(newActivity);
-        _dbContext.SaveChanges();
-    }
-    public void RecordAsInactive(string userId, DateTime lastActiveTime){
-        if (AlreadyRecordedInactive()){
-            // Console.WriteLine("User is already recorded as inactive");
-            return;
-        }
-        
-        EndVisit(userId, lastActiveTime);
-        return;
-        
-        UserSiteVisit newActivity = new UserSiteVisit{
-            UserId = userId,
-            VisitStartDate = lastActiveTime
-        };
-        
-        _dbContext.Add(newActivity);
         _dbContext.SaveChanges();
     }
 
