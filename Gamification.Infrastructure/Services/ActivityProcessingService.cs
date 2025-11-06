@@ -13,7 +13,7 @@ namespace Gamification.Infrastructure.Services;
 /// Provides services for calculation of productivity score when analyzing sites
 /// as well as calculating time spent on productive activities
 /// </summary>
-public class ActivityProcessingService : IActivityProcessingService{
+public class ActivityProcessingService : IActivityProcessingService, IStreakManagementService{
 
     private readonly ProductivityDbContext _dbContext;
     private readonly ILogger<ActivityProcessingService> _logger;
@@ -42,6 +42,7 @@ public class ActivityProcessingService : IActivityProcessingService{
             .Include(u => u.Site)
             .Include(u => u.Analysis)
             .Include(u => u.User)
+            .ThenInclude(user => user.GameStat)
             //Pick visits that isn't processed, and has complete duration info i.e. start time and end time
             .Where(u => u.ProcessedAt == null && u.VisitEndDate != null)
             .OrderBy(u => u.VisitStartDate)
@@ -58,16 +59,27 @@ public class ActivityProcessingService : IActivityProcessingService{
             return 0;
         }
 
-        await ProcessScore(processableVisits);
-        await CalculateProductivityTime(processableVisits);
-        int processedRows = SetAsProcessed(processableVisits);
+        var visitsByUser = processableVisits.GroupBy(v => v.User);
+        int totalProcessedRows = 0;
+        foreach (var userVisits in visitsByUser){
+            User user = userVisits.Key;
+            UserSiteVisit[] visits = userVisits.ToArray();
+            
+            await ProcessScoreForUser(user, visits);
+            await CalculateProductivityTime(user, visits);
+            totalProcessedRows += SetAsProcessed(visits);
+
+            await NotifyGameEvent(new ProcessingFinishedEvent(user));
+
+        }
         _dbContext.SaveChanges();
 
-        return processedRows;
+        return totalProcessedRows;
     }
 
     //Processes the user's activity to provide score metrics such as exp, coins
-    async Task ProcessScore(UserSiteVisit[] siteVisits){
+    async Task ProcessScoreForUser(User user, UserSiteVisit[] siteVisits){
+        float totalExpGained = 0;
         for (int i = 0; i < siteVisits.Length; i++){
             if (siteVisits[i].VisitEndDate == null){
                 _logger.LogWarning("A site does not have VisitEndDate set yet. So it is not possible to calculate its score");
@@ -80,36 +92,56 @@ public class ActivityProcessingService : IActivityProcessingService{
             float timeSpent = (float)((siteVisits[i].VisitEndDate - siteVisits[i].VisitStartDate)?.TotalSeconds * 0.0167f
                                       ?? throw new Exception("Visit start date/end date is missing while calculating time spent."));
 
-            GameStat userStat =  await _dbContext.GameStats.
-                Where(stats => stats.UserId == siteVisits[i].UserId).FirstOrDefaultAsync()
+            GameStat userStat =  await _dbContext.GameStats
+                                     .Where(stats => stats.UserId == siteVisits[i].UserId).FirstOrDefaultAsync()
                 ?? throw new Exception("User not found.");
             
             AnalysisResult? analysis = _dbContext.GetAnalysisOfSite(siteVisits[i].SiteId ?? throw new Exception("No site id"), siteVisits[i].UserId);
             if (analysis == null) throw new Exception();
             
-            float expGained = timeSpent * (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore));
-            userStat.ExperiencePoints += expGained;
-            await _gameChannel.Writer.WriteAsync(new ExpGainedEvent(userStat.UserId, expGained, userStat.ExperiencePoints));
+            float expGainAmt = timeSpent * (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore)) ;
+            userStat.ExperiencePoints += expGainAmt;
+            totalExpGained += expGainAmt;
             
             for (int expIndex = 0; expIndex < ExperienceTableProgressionRule.ExpTable.Length; expIndex++){
                 if (userStat.ExperiencePoints < ExperienceTableProgressionRule.ExpTable[expIndex]){
-                    userStat.Level = expIndex;
+                    if (userStat.Level != expIndex){
+                        userStat.Level = expIndex;
+                        await NotifyGameEvent(new LevelUpEvent(user, expIndex));
+                    }
+
                     break;
                 }
             }
-            _logger.LogInformation(
-                "Site {site} was visisted for {duration} seconds", 
-                siteVisits[i].Site.Title,
-                timeSpent);
+            // _logger.LogInformation(
+            //     "Site {site} was visisted for {duration} seconds", 
+            //     siteVisits[i].Site.Title,
+            //     timeSpent);
+        }
+
+        if (totalExpGained > 0){
+            await NotifyGameEvent(new ExpGainedEvent(user, totalExpGained, user.GameStat.ExperiencePoints));
         }
     }
 
     //Calculates the user's productivity time
-    async Task CalculateProductivityTime(UserSiteVisit[] visitsToProcess){
+    async Task CalculateProductivityTime(User user, UserSiteVisit[] visitsToProcess){
         int productivityThreshold = 50; //Any site which has a productivity score of over 50 is to be selected.
+        ProductivityLog userLog = FindOrCreateTodaysLog(user.UserId);
         UserSiteVisit[] productiveVisits =  visitsToProcess
-            .Where(visit => visit.Analysis?.IntrinsicScore > productivityThreshold)
+            .Where(visit => visit.Analysis?.IntrinsicScore >= productivityThreshold)
             .ToArray();
+        
+        UserSiteVisit[] unproductiveVisits = visitsToProcess
+            .Where(visit => visit.Analysis?.IntrinsicScore < productivityThreshold)
+            .ToArray();
+        
+        TimeSpan unproductiveTime = TimeSpan.Zero;
+        foreach (UserSiteVisit? visit in unproductiveVisits){
+            unproductiveTime += TimeSpan.FromSeconds((visit.VisitEndDate - visit.VisitStartDate)?.TotalSeconds ?? 0);
+            Console.WriteLine("Unproductive: " + TimeSpan.FromSeconds((visit.VisitEndDate - visit.VisitStartDate)?.TotalSeconds ?? 0));
+        }
+        userLog.UnproductiveTime += unproductiveTime;
         
         foreach (UserSiteVisit? visit in productiveVisits){
             GameStat userStat = visit.User?.GameStat ?? throw new Exception("No User or gamestat table found");
@@ -120,12 +152,33 @@ public class ActivityProcessingService : IActivityProcessingService{
             userStat.ProductivityMetrics[GameStat.TimeFrequency.Monthly] += productiveTime;
             userStat.ProductivityMetrics[GameStat.TimeFrequency.Yearly] += productiveTime;
             userStat.ProductivityMetrics[GameStat.TimeFrequency.Lifetime] += productiveTime;
+
             
+            userLog.ProductiveTime += productiveTime;
+            
+            //To notify change in a JSON object, so efcore knows it MUST update this JSON property. Otherwise it just ignores it.
             _dbContext.Entry(userStat).Property(u => u.ProductivityMetrics).IsModified = true;
             
             // _logger.LogInformation("Productive time spent is: " + productiveTime);
             // _logger.LogInformation("User's new daily productivity is: " + userStat.ProductivityMetrics[GameStat.TimeFrequency.Daily]);
+            
         }
+    }
+    
+    ProductivityLog FindOrCreateTodaysLog(string userId){
+        ProductivityLog? log = _dbContext.ProductivityLogs.FirstOrDefault(log => log.LogDate == DateTime.UtcNow.Date && log.UserId == userId);
+        if (log == null){
+            log = new ProductivityLog{
+                UserId = userId,
+                LogDate = DateTime.UtcNow.Date,
+            };
+            _dbContext.ProductivityLogs.Add(log);
+        }
+        return log;
+    }
+
+    async Task NotifyGameEvent(GameEvent gameEvent){
+        await _gameChannel.Writer.WriteAsync(gameEvent);
     }
 
     int SetAsProcessed(UserSiteVisit[] visitsToProcess){
@@ -155,10 +208,40 @@ public class ActivityProcessingService : IActivityProcessingService{
             UserId = userId,
             Coin = 0,
             ExperiencePoints = 0,
-            Level = 1
+            Level = 0
         };
 
         _dbContext.Add(newStat);
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<int> ManageDailyStreak(){
+        User[] users = await _dbContext.Users.Include(u => u.GameStat).ToArrayAsync();
+        foreach (var user in users){
+            TimeSpan dailyProductivityTime = user.GameStat.ProductivityMetrics[GameStat.TimeFrequency.Daily];
+            
+            if (dailyProductivityTime > user.DailyTargetHours){
+                //Increment the streak by one.
+                user.GameStat.DailyStreakCount += 1;
+            }
+
+            _logger.LogInformation($"Daily productivity time: {dailyProductivityTime}, target:  {user.DailyTargetHours}");
+        }
+
+        return users.Length;
+    }
+
+    public async Task<int> ManageWeeklyStreak(){
+        User[] users = await _dbContext.Users.Include(u => u.GameStat).ToArrayAsync();
+        foreach (var user in users){
+            TimeSpan weeklyProductivityTime = user.GameStat.ProductivityMetrics[GameStat.TimeFrequency.Weekly];
+            if (weeklyProductivityTime > user.DailyTargetHours * 7){
+                user.GameStat.WeeklyStreakCount += 1;
+            }
+            
+            _logger.LogInformation($"Weekly productivity time: {weeklyProductivityTime}, target:  {user.DailyTargetHours*7}");
+        }
+
+        return users.Length;
     }
 }

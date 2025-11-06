@@ -2,4 +2,4 @@ using Gamification.Core.Models;
 
 namespace Gamification.Infrastructure.Events;
 
-public record LevelUpEvent(User User, int NewLevel) : GameEvent(User);
+public record ProcessingFinishedEvent(User User) : GameEvent(User);

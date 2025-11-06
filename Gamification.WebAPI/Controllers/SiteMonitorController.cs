@@ -35,7 +35,7 @@ public class SiteMonitorController : ControllerBase{
     /// <summary>
     /// Will take in the site's information & user's goals then prompt the LLM to analyze site for productivity scores.
     /// </summary>
-    // [Authorize]
+    [Authorize]
     [HttpPost("AnalyzeSite")]
     public IActionResult AnalyzeSite([FromBody] SiteVisitDTO siteVisitDetails){
         _logger.LogInformation("Received request to analyze site.");

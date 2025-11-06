@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Gamification.Infrastructure.DatabaseService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gamification.Infrastructure.Migrations
 {
     [DbContext(typeof(ProductivityDbContext))]
-    partial class ProductivityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104155505_UniqueUserAchievements")]
+    partial class UniqueUserAchievements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,40 +192,6 @@ namespace Gamification.Infrastructure.Migrations
                     b.ToTable("analysis_results", (string)null);
                 });
 
-            modelBuilder.Entity("Gamification.Core.Models.ProductivityLog", b =>
-                {
-                    b.Property<string>("ProductivityLogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasColumnName("productivity_log_id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("LogDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("log_date");
-
-                    b.Property<TimeSpan>("ProductiveTime")
-                        .HasColumnType("interval")
-                        .HasColumnName("productive_time");
-
-                    b.Property<TimeSpan>("UnproductiveTime")
-                        .HasColumnType("interval")
-                        .HasColumnName("unproductive_time");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("ProductivityLogId")
-                        .HasName("pk_productivity_logs");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_productivity_logs_user_id");
-
-                    b.ToTable("productivity_logs", (string)null);
-                });
-
             modelBuilder.Entity("Gamification.Core.Models.Site", b =>
                 {
                     b.Property<string>("SiteId")
@@ -395,18 +364,6 @@ namespace Gamification.Infrastructure.Migrations
                     b.Navigation("Site");
                 });
 
-            modelBuilder.Entity("Gamification.Core.Models.ProductivityLog", b =>
-                {
-                    b.HasOne("Gamification.Core.Models.User", "User")
-                        .WithMany("ProductivityLogs")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_productivity_logs_users_user_id");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Gamification.Core.Models.UserSiteVisit", b =>
                 {
                     b.HasOne("Gamification.Core.Models.AnalysisResult", "Analysis")
@@ -454,8 +411,6 @@ namespace Gamification.Infrastructure.Migrations
                 {
                     b.Navigation("GameStat")
                         .IsRequired();
-
-                    b.Navigation("ProductivityLogs");
 
                     b.Navigation("UserAchievements");
 

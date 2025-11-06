@@ -15,4 +15,5 @@ public class User{
     public GameStat GameStat{ get; set; } //Nav property
     public ICollection<UserSiteVisit>? UserSiteVisits{ get; set; }
     public ICollection<UserAchievement>?  UserAchievements{ get; set; }
+    public ICollection<ProductivityLog>? ProductivityLogs{ get; set; }
 }

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Gamification.Core.Models;
 using Gamification.Core.GameModels;
+using GenerativeAI.Types;
 
 namespace Gamification.Infrastructure.DatabaseService;
 
@@ -13,6 +14,7 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
     public DbSet<GameStat> GameStats{ get; set; }
     public DbSet<Achievement> Achievements{ get; set; }
     public DbSet<UserAchievement> UserAchievements{ get; set; }
+    public DbSet<ProductivityLog> ProductivityLogs{ get; set; }
 
     //Defines the schema constraints, namings etc
     protected override void OnModelCreating(ModelBuilder modelBuilder){
@@ -22,6 +24,7 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         SetupUserSiteVisitsTable(modelBuilder);
         SetupGameStatsTable(modelBuilder);
         SetupAchievementTable(modelBuilder);
+        SetupProductivityLogTable(modelBuilder);
     }
 
     void SetupUsersTable(ModelBuilder modelBuilder){
@@ -120,6 +123,10 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
             .HasOne(ua => ua.Achievement)
             .WithMany(a => a.AchievedUsers)
             .HasForeignKey(ua => ua.AchievementId);
+        
+        userAchievement
+            .HasIndex(ua => new {ua.UserId, ua.AchievementId})
+            .IsUnique();
 
         var achievementTable = modelBuilder.Entity<Achievement>();
         achievementTable.HasKey(a => a.AchievementId);
@@ -129,6 +136,19 @@ public class ProductivityDbContext(DbContextOptions<ProductivityDbContext> optio
         achievementTable
             .HasIndex(a => a.Key)
             .IsUnique();
+    }
+
+    void SetupProductivityLogTable(ModelBuilder modelBuilder){
+        var logTable = modelBuilder.Entity<ProductivityLog>();
+        logTable.HasKey(l => l.ProductivityLogId);
+        
+        logTable
+            .HasOne(log => log.User)
+            .WithMany(user => user.ProductivityLogs)
+            .HasForeignKey(log => log.UserId);
+        
+        logTable.Property(log => log.ProductivityLogId)
+            .HasDefaultValueSql("gen_random_uuid()");
     }
 
     public AnalysisResult? GetAnalysisOfSite(string siteId, string userId){

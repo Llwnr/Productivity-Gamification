@@ -30,6 +30,7 @@ builder.Services.AddScoped<ISiteAnalysisService, SiteAnalysisService>();
 builder.Services.AddScoped<IInactivityRecordingService, InactivityRecordingService>();
 builder.Services.AddScoped<IActivityRecorder, ActivityRecorder>();
 builder.Services.AddScoped<IActivityProcessingService, ActivityProcessingService>();
+builder.Services.AddScoped<IStreakManagementService, ActivityProcessingService>();
 
 builder.Services.AddSingleton<AnalysisQueryManager>();
 builder.Services.AddSingleton<IAnalysisQueryManager>(
@@ -86,10 +87,10 @@ using (var scope = app.Services.CreateScope()){
     // Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
     // services.GetRequiredService<IContentAnalysisFilter>();
 
-    Console.WriteLine("Adding achievements");
     var dbContext = services.GetRequiredService<ProductivityDbContext>();
     try{
         if (!dbContext.Achievements.Any()){
+            Console.WriteLine("Adding achievements");
             dbContext.Achievements.AddRange(
                 AchievementDefinition.GetAchievementDefinitions());
             dbContext.SaveChanges();

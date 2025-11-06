@@ -195,18 +195,18 @@ public static class AchievementDefinition{
             Description = "Reach level 100."
         },
         new Achievement{
-            Key = "xp_1000",
+            Key = "xp_10000",
             ResetTime = Achievement.ResetTimeEnum.Never,
             ImageUrl = "/images/achievements/xp_collector.png",
             Title = "XP Collector",
-            Description = "Earn a total of 1,000 Experience Points."
+            Description = "Earn a total of 10,000 Experience Points."
         },
         new Achievement{
-            Key = "xp_10000",
+            Key = "xp_50000",
             ResetTime = Achievement.ResetTimeEnum.Never,
             ImageUrl = "/images/achievements/xp_enthusiast.png",
             Title = "XP Enthusiast",
-            Description = "Earn a total of 10,000 Experience Points."
+            Description = "Earn a total of 50,000 Experience Points."
         },
         new Achievement{
             Key = "xp_100000",
@@ -214,6 +214,34 @@ public static class AchievementDefinition{
             ImageUrl = "/images/achievements/xp_overlord.png",
             Title = "XP Overlord",
             Description = "Earn a total of 100,000 Experience Points."
+        },
+        new Achievement{
+            Key = "xp_250000",
+            ResetTime = Achievement.ResetTimeEnum.Never,
+            ImageUrl = "/images/achievements/xp_overlord.png",
+            Title = "XP Overlord",
+            Description = "Earn a total of 250,000 Experience Points."
+        },
+        new Achievement{
+            Key = "xp_500000",
+            ResetTime = Achievement.ResetTimeEnum.Never,
+            ImageUrl = "/images/achievements/xp_overlord.png",
+            Title = "XP Overlord",
+            Description = "Earn a total of 500,000 Experience Points."
+        },
+        new Achievement{
+            Key = "growth_10000",
+            ResetTime = Achievement.ResetTimeEnum.Never,
+            ImageUrl = "/.png",
+            Title = "Novice grower",
+            Description = "Perform consistent productive activity in a short time."
+        },
+        new Achievement{
+            Key = "growth_50000",
+            ResetTime = Achievement.ResetTimeEnum.Never,
+            ImageUrl = "/.png",
+            Title = "Supreme grower",
+            Description = "Perform highly productive activity consistently in a short time."
         }
     };
 }

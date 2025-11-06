@@ -1,3 +1,5 @@
+using Gamification.Core.Models;
+
 namespace Gamification.Infrastructure.Events;
 
-public record ExpGainedEvent(string UserId, float GainedExp, float TotalExp) : GameEvent;
+public record ExpGainedEvent(User User, float GainedExp, float TotalExp) : GameEvent(User);
