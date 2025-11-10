@@ -44,7 +44,7 @@ public class ActivityProcessingService : IActivityProcessingService, IStreakMana
             .Include(u => u.User)
             .ThenInclude(user => user.GameStat)
             //Pick visits that isn't processed, and has complete duration info i.e. start time and end time
-            .Where(u => u.ProcessedAt == null && u.VisitEndDate != null)
+            .Where(u => u.ProcessedAt == null && u.VisitEndDate.HasValue)
             .OrderBy(u => u.VisitStartDate)
             .ToArrayAsync();
 
@@ -128,41 +128,16 @@ public class ActivityProcessingService : IActivityProcessingService, IStreakMana
     async Task CalculateProductivityTime(User user, UserSiteVisit[] visitsToProcess){
         int productivityThreshold = 50; //Any site which has a productivity score of over 50 is to be selected.
         ProductivityLog userLog = FindOrCreateTodaysLog(user.UserId);
-        UserSiteVisit[] productiveVisits =  visitsToProcess
-            .Where(visit => visit.Analysis?.IntrinsicScore >= productivityThreshold)
-            .ToArray();
-        
-        UserSiteVisit[] unproductiveVisits = visitsToProcess
-            .Where(visit => visit.Analysis?.IntrinsicScore < productivityThreshold)
-            .ToArray();
-        
-        TimeSpan unproductiveTime = TimeSpan.Zero;
-        foreach (UserSiteVisit? visit in unproductiveVisits){
-            unproductiveTime += TimeSpan.FromSeconds((visit.VisitEndDate - visit.VisitStartDate)?.TotalSeconds ?? 0);
-            Console.WriteLine("Unproductive: " + TimeSpan.FromSeconds((visit.VisitEndDate - visit.VisitStartDate)?.TotalSeconds ?? 0));
-        }
-        userLog.UnproductiveTime += unproductiveTime;
-        
-        foreach (UserSiteVisit? visit in productiveVisits){
-            GameStat userStat = visit.User?.GameStat ?? throw new Exception("No User or gamestat table found");
-            
-            TimeSpan productiveTime = TimeSpan.FromSeconds((visit.VisitEndDate - visit.VisitStartDate)?.TotalSeconds ?? 0);
-            userStat.ProductivityMetrics[GameStat.TimeFrequency.Daily] += productiveTime;
-            userStat.ProductivityMetrics[GameStat.TimeFrequency.Weekly] += productiveTime;
-            userStat.ProductivityMetrics[GameStat.TimeFrequency.Monthly] += productiveTime;
-            userStat.ProductivityMetrics[GameStat.TimeFrequency.Yearly] += productiveTime;
-            userStat.ProductivityMetrics[GameStat.TimeFrequency.Lifetime] += productiveTime;
 
-            
-            userLog.ProductiveTime += productiveTime;
-            
-            //To notify change in a JSON object, so efcore knows it MUST update this JSON property. Otherwise it just ignores it.
-            _dbContext.Entry(userStat).Property(u => u.ProductivityMetrics).IsModified = true;
-            
-            // _logger.LogInformation("Productive time spent is: " + productiveTime);
-            // _logger.LogInformation("User's new daily productivity is: " + userStat.ProductivityMetrics[GameStat.TimeFrequency.Daily]);
-            
-        }
+        TimeSpan totalProductiveTime = TimeSpan.FromTicks(visitsToProcess
+                .Where(visit => visit.Analysis?.IntrinsicScore >= productivityThreshold && visit.VisitEndDate.HasValue)
+                .Sum(visit => (visit.VisitEndDate.Value - visit.VisitStartDate).Ticks));
+        userLog.ProductiveTime += totalProductiveTime;
+        
+        TimeSpan totalUnproductiveTime = TimeSpan.FromTicks(visitsToProcess
+            .Where(visit => visit.Analysis?.IntrinsicScore < productivityThreshold && visit.VisitEndDate.HasValue)
+            .Sum(visit => (visit.VisitEndDate.Value - visit.VisitStartDate).Ticks));
+        userLog.UnproductiveTime += totalUnproductiveTime;
     }
     
     ProductivityLog FindOrCreateTodaysLog(string userId){
@@ -220,14 +195,14 @@ public class ActivityProcessingService : IActivityProcessingService, IStreakMana
         foreach (var user in users){
             TimeSpan dailyProductivityTime = user.GameStat.ProductivityMetrics[GameStat.TimeFrequency.Daily];
             
-            if (dailyProductivityTime > user.DailyTargetHours){
+            if (dailyProductivityTime >= user.DailyTargetHours){
                 //Increment the streak by one.
                 user.GameStat.DailyStreakCount += 1;
             }
 
             _logger.LogInformation($"Daily productivity time: {dailyProductivityTime}, target:  {user.DailyTargetHours}");
         }
-
+        await _dbContext.SaveChangesAsync();
         return users.Length;
     }
 
@@ -235,13 +210,14 @@ public class ActivityProcessingService : IActivityProcessingService, IStreakMana
         User[] users = await _dbContext.Users.Include(u => u.GameStat).ToArrayAsync();
         foreach (var user in users){
             TimeSpan weeklyProductivityTime = user.GameStat.ProductivityMetrics[GameStat.TimeFrequency.Weekly];
-            if (weeklyProductivityTime > user.DailyTargetHours * 7){
+            if (weeklyProductivityTime >= user.DailyTargetHours * 7){
                 user.GameStat.WeeklyStreakCount += 1;
             }
             
             _logger.LogInformation($"Weekly productivity time: {weeklyProductivityTime}, target:  {user.DailyTargetHours*7}");
         }
 
+        await _dbContext.SaveChangesAsync();
         return users.Length;
     }
 }

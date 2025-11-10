@@ -1,79 +1,82 @@
-<div class="sidebar">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
+<div class="sidebar">
+    <!-- Sidebar content -->
 </div>
+
 <!-- Main container for the dashboard -->
 <div class="dashboard-container">
-	<div class="chartHolder">
-		<div id="myChart"></div>
-	</div>
 
-	<!-- User basic stats section -->
-	<div class="statCards">
-		<div class="pointsCard" id="pointsCard">
+    <!-- NEW: A header to group user info and streak cards -->
+    <header class="dashboard-header">
+        
+        <!-- MOVED: Your stats-section now acts as the user info block on the left -->
+        <!-- I've added a placeholder for a username, assuming it comes from your 'stat' object -->
+        <section class="stats-section">
+            <div class="user-profile-info">
+                <h1 class="username">Hello! Llwnr</h1>
+                <div class="level-progress-container">
+                    <span class="level">Lv. 5</span>
+                    <div class="progress-bar">
+                        <!-- You can bind the width dynamically, e.g., [style.width.%]="getExperiencePercentage(stat)" -->
+                        <div class="progress-bar-fill" style="width: 30%;"></div>
+                    </div>&nbsp;&nbsp;28%
+                </div>
+            </div>
+        </section>
 
-		</div>
-		<div class="expCard" id="expCard">
+        <!-- MOVED: Your statCards for the diamonds on the right -->
+        <!-- EXAMPLE: You would loop through an array of stats for these cards -->
+        <div class="statCards">
+            <!-- This is just an example of how you might render them dynamically -->
+            <!-- @for (streak of streaks; track $index) { -->
+            <div class="streakCard">
+                <div *ngIf="stat$ | async as stat" class="diamond-content">
+                    <span class="stat-value">{{stat.level}}</span> <!-- {{ streak.value }} -->
+                    <span class="stat-label">Level</span> <!-- {{ streak.label }} -->
+                </div>
+            </div>
+            <div class="streakCard">
+                <div class="diamond-content">
+                    <span class="stat-value">5</span>
+                    <span class="stat-label">Focus Time</span>
+                </div>
+            </div>
+            <div class="streakCard">
+                <div class="diamond-content">
+                    <span class="stat-value">5</span>
+                    <span class="stat-label">Achievements</span>
+                </div>
+            </div>
+            <div class="streakCard">
+                <div class="diamond-content">
+                    <span class="stat-value">5</span>
+                    <span class="stat-label">Weekly Stream</span>
+                </div>
+            </div>
+            <!-- } -->
+        </div>
 
-		</div>
-		<div class="levelCard" id="levelCard">
+    </header>
 
-		</div>
-		<div class="streakCard" id="streakCard">
-
-		</div>
-	</div>
-
-	<div class="charts-grid">
-		<div id="by-category">
-			
-		</div>
-		<div id="by-top-sites">
-			
-		</div>
-		<div id="by-time-spent">
-			
-		</div>
-	</div>
-
-	<!-- Section 1: User Game Statistics -->
-	<section class="stats-section">
-		<!-- <h2>User Stats</h2> -->
-		<!-- This container will only show up when the userStat object has been loaded from the API -->
-		<div *ngIf="stat$ | async as stat" class="stats-grid">
-			<div class="stat-card">
-				<span class="stat-label">Level: </span>
-				<span class="stat-value">{{ stat.level }}</span>
-			</div>
-			<div class="stat-card">
-				<span class="stat-label">Experience Points: </span>
-				<span class="stat-value">{{ stat.experiencePoints }} XP</span>
-			</div>
-			<div class="stat-card">
-				<span class="stat-label">Coins: </span>
-				<span class="stat-value">{{ stat.coin }} 🪙</span>
-			</div>
-		</div>
-
-		@if(siteVisits$ | async; as siteVisits){
-			<div>
-				Site data:
-				@for (siteVisit of siteVisits; track $index) {
-				<div>
-					Url: {{siteVisit.siteUrl}}
-					<br />
-					Time spent: {{ siteVisit.timeSpent}}
-					<br />
-					Score: {{ siteVisit.baseProductiveScore }}
-					<br />
-					Category: {{ siteVisit.mainCategory }}
-				</div>
-				}
-			</div>
-		}
-
-		<!-- Template to show while stats are loading -->
-		<ng-template #loadingStats>
-			<p>Loading user stats...</p>
-		</ng-template>
-	</section>
+    <!-- Your original charts-grid, now styled as the main content area -->
+    <div class="charts-grid">
+        <div id="by-category">
+            <!-- Your chart for 'by-category' will render here -->
+        </div>
+        <div id="by-top-sites">
+            <!-- Your chart for 'by-top-sites' will render here -->
+        </div>
+        <div id="by-time-spent">
+            <!-- Your chart for 'by-time-spent' will render here -->
+        </div>
+        <div id="heatmap-container">
+            <!-- Your chart for 'by-time-spent' will render here -->
+        </div>
+        <div id="heatmap-container">
+            <!-- Your chart for 'by-time-spent' will render here -->
+        </div>
+    </div>
 </div>

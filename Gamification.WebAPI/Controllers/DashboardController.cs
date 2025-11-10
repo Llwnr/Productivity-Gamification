@@ -35,27 +35,26 @@ public class DashboardController : ControllerBase{
         List<UserSiteVisit> userSiteVisits = _dbContext.UserSiteVisits
             .Include(s => s.Analysis)
             .Include(s => s.Site)
-            .Where(u => u.UserId == UserId && u.VisitEndDate != null)
+            .Where(u => u.UserId == UserId && u.VisitEndDate.HasValue && u.ProcessedAt.HasValue)
             .ToList();
         List<SiteVisitRecordDTO> siteVisitDtos = new();
 
         foreach (var visit in userSiteVisits){
             SiteVisitRecordDTO? sameSiteVisit = siteVisitDtos.FirstOrDefault(v => v.SiteUrl == visit.Site?.Url);
             if (sameSiteVisit != null){
-                sameSiteVisit.TimeSpent += (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds;
+                sameSiteVisit.TimeSpent += (float)(visit.VisitEndDate.Value - visit.VisitStartDate).TotalSeconds;
             }
             else{
                 siteVisitDtos.Add(new SiteVisitRecordDTO{
                     SiteUrl = visit.Site.Url,
                     BaseProductiveScore = (float)(visit.Analysis.IntrinsicScore * 0.5 * visit.Analysis.RelevanceScore),
-                    TimeSpent = (float)(visit.VisitEndDate - visit.VisitStartDate).Value.TotalSeconds,
+                    TimeSpent = (float)(visit.VisitEndDate.Value - visit.VisitStartDate).TotalSeconds,
                     MainCategory = visit.Analysis.Category[0],
                     VisitDate = visit.VisitStartDate,
                 });
             }
         }
 
-        _logger.LogInformation("{Score}", siteVisitDtos[0].BaseProductiveScore);
         return Ok(siteVisitDtos);
     }
 }

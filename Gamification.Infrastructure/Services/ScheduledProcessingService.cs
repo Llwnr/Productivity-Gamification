@@ -1,4 +1,8 @@
+using Gamification.Core.GameModels;
 using Gamification.Core.Interfaces;
+using Gamification.Core.Models;
+using Gamification.Infrastructure.DatabaseService;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -18,16 +22,16 @@ public class ScheduledProcessingService : BackgroundService{
         _logger.LogInformation("Starting up scheduling service");
         
         Task periodicTask = ExecutePeriodicAsync(stoppingToken);
-        // Task scheduledTask = ExecuteScheduledAsync(stoppingToken);
+        Task scheduledTask = ExecuteScheduledAsync(stoppingToken);
         
-        await Task.WhenAll(periodicTask);
+        await Task.WhenAll(periodicTask, scheduledTask);
         
         _logger.LogInformation("Scheduling service has stopped");
     }
 
     private async Task ExecutePeriodicAsync(CancellationToken stoppingToken){
         while (!stoppingToken.IsCancellationRequested){
-            await Task.Delay(1000*5, stoppingToken);
+            await Task.Delay(1000*60*10, stoppingToken);
             using (var scope = _scopeFactory.CreateScope()){
                 IActivityProcessingService  activityProcessingService = scope.ServiceProvider.GetRequiredService<IActivityProcessingService>();
                 _logger.LogInformation("Processing score...");
@@ -48,6 +52,9 @@ public class ScheduledProcessingService : BackgroundService{
             await Task.Delay(delay, stoppingToken);
             
             using (var scope = _scopeFactory.CreateScope()){
+                _logger.LogInformation("Pruning old and obsolete productivity data");
+                ProductivityDbContext dbContext = scope.ServiceProvider.GetRequiredService<ProductivityDbContext>();
+                await PruneObsoleteData(dbContext);
                 _logger.LogInformation("Managing daily streaks...");
                 IStreakManagementService  activityProcessingService = scope.ServiceProvider.GetRequiredService<IStreakManagementService>();
                 await activityProcessingService.ManageDailyStreak();
@@ -57,14 +64,39 @@ public class ScheduledProcessingService : BackgroundService{
                     _logger.LogInformation("Managing weekly streaks...");
                     await activityProcessingService.ManageWeeklyStreak();
                 }
-
-                
-                
-                //Manages the user's total productivity time spent daily, weekly, monthly, yearly etc by removing older data from them.
-                void PruneOldProductivitiyMetrics(){
-                    
-                }
             }
+        }
+    }
+    
+    async Task PruneObsoleteData(ProductivityDbContext dbContext){
+        User[] users = await dbContext.Users
+            .Include(u => u.ProductivityLogs)
+            .Include(u => u.GameStat)
+            .ToArrayAsync();
+        foreach (var user in users){
+            ProductivityLog[]? logs = user.ProductivityLogs?.ToArray();
+            if (logs == null || logs.Length == 0) return;
+
+            DateTime today = DateTime.UtcNow.Date;
+            var timePeriods = new Dictionary<GameStat.TimeFrequency, Func<DateTime, bool>>{
+                {GameStat.TimeFrequency.Daily, date => date.Date >= today},
+                {GameStat.TimeFrequency.Weekly, date => date.Date >= today.AddDays(-6)},
+                {GameStat.TimeFrequency.Monthly, date => date.Date >= today.AddDays(-30)},
+                {GameStat.TimeFrequency.Yearly, date => date.Date >= today.AddDays(-365)},
+                {GameStat.TimeFrequency.Lifetime, date => true},
+            };
+
+            foreach (var timePeriod in timePeriods){
+                TimeSpan productiveTime = TimeSpan.FromTicks(logs
+                    .Where(log => timePeriod.Value(log.LogDate))
+                    .Sum(log => log.ProductiveTime.Ticks));
+
+                user.GameStat.ProductivityMetrics[timePeriod.Key] = productiveTime;
+                Console.WriteLine("Productive time on day:" + timePeriod.Key + " : " + productiveTime);
+            }
+            //To notify change in a JSON object, so efcore knows it MUST update this JSON property. Otherwise it just ignores it.
+            dbContext.Entry(user.GameStat).Property(u => u.ProductivityMetrics).IsModified = true;
+            await dbContext.SaveChangesAsync();
         }
     }
 }

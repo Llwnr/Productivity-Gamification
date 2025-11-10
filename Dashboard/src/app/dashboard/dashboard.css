@@ -1,29 +1,138 @@
-*{
-    color: white;
+/* --- Base and Body Styles --- */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: rgb(34, 35, 41);
 }
-.sidebar{
+
+* {
+    color: white;
+    box-sizing: border-box;
+}
+
+/* --- Sidebar --- */
+.sidebar {
     width: 280px;
     height: 100%;
-    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
     background-color: rgb(27, 21, 35);
 }
-.dashboard-container{
-    margin-left: 300px;
+
+/* --- Main Dashboard Container --- */
+.dashboard-container {
+    margin-left: 280px;
+    padding: 30px;
 }
-.statCards{
+
+/* --- NEW: Header Layout --- */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+/* --- Styling the User Info Section (Your .stats-section) --- */
+.stats-section {
+    /* Resetting any previous styling */
+    padding: 0;
+    margin: 0;
+    background: none;
+}
+
+.user-profile-info .username {
+    font-size: 2.8em;
+    margin: 0 0 10px 0;
+    font-weight: 500;
+}
+
+.level-progress-container {
+    display: flex;
+    align-items: center;
+    color: #b0b0b0;
+}
+
+.level-progress-container .level {
+    font-size: 1em;
+    color: #b0b0b0;
+    margin-right: 15px;
+}
+
+.progress-bar {
+    width: 220px;
+    height: 12px;
+    border-radius: 5px;
+    background-color: #282A2D;
+    border: 1px solid rgb(70, 71, 76);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    background-color: #43E1CB;
+}
+
+/* --- Styling YOUR .statCards into Diamonds --- */
+.statCards {
     display: flex;
 }
-.statCards div{
-    border: 3px solid rgb(41,42,47);
-    border-radius: 10px;
-    height: 200px;
-    width: 200px;
-    margin: 25px;
+
+/* Targeting each card (e.g., .streakCard) inside .statCards */
+.statCards > div {
+    width: 150px;
+    height: 90px;
+    margin-left: 20px;
+    border-radius: 5px;
+    background-color: rgb(41, 42, 47);
+    border: 1px solid rgb(60, 61, 66);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-.charts-grid{
+
+/* This container holds the dynamic content and rotates it back */
+.diamond-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.diamond-content .stat-value {
+    font-size: 1.6em;
+}
+
+.diamond-content .stat-label {
+    font-size: 1em;
+    color: #b0b0b0;
+    margin-top: 5px;
+    text-align: center;
+    width: 150%;
+}
+
+/* --- Styling YOUR .charts-grid as the Main Content Area --- */
+.charts-grid {
+    width: 100%;
+    min-height: 450px;
+    /* Your original flex properties */
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-between;
+    gap:20px;
 }
-.charts-grid div{
-    margin: 25px;
+.charts-grid div {
+    border: 1px solid rgb(60, 61, 66);
+    min-width: 0px;
+    height: 400px; /* Give them a fixed height or min-height */
+}
+#by-category{flex: 1 1 300px;}
+#by-top-sites{flex: 1 1 400px;}
+#by-time-spent {
+    /* Each will take up roughly 50% of the width, minus the gap */
+    flex: 1 1 700px;
+}
+#heatmap-container{
+    flex: 1 1 300px;
 }
