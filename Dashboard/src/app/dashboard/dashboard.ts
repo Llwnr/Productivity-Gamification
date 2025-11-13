@@ -1,9 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Api, GameStat, SiteVisit } from '../services/api';
+import { Api, GameStat } from '../services/api';
 import { Observable } from 'rxjs';
 import * as Plotly from 'plotly.js-dist-min';
-import { DashboardData, PointsData, ExpGaugeData, LevelData, StreakData, CategoriesData, TopSitesData, TimeSpentData, DailyUsageData, HeatmapData, ProductivityLog } from '../services/dashboard-data';
+import { DashboardData, PointsData, ExpGaugeData, LevelData, StreakData, CategoriesData, TopSitesData, TimeSpentData, DailyUsageData, HeatmapData, ProductivityLog, DailyAnalyticsDTO } from '../services/dashboard-data';
 
 @Component({
   standalone: true,
@@ -20,13 +20,13 @@ export class Dashboard implements OnInit{
   chartData: ChartData = new ChartData();
 
   public stat$?: Observable<GameStat>;
-  public siteVisits$? : Observable<SiteVisit[]>;
-
-  public dummyData: SiteVisit[] = this.dashboardService.getData();
+  public dailyAnalytics$? : Observable<DailyAnalyticsDTO[]>;
+  public productivityLogs$? : Observable<ProductivityLog[]>;
 
   ngOnInit(): void{
     this.stat$ = this.apiService.getDashboardStat();
-    this.siteVisits$ = this.apiService.getUserSiteVisits();
+    this.dailyAnalytics$ = this.apiService.getUserSiteVisits();
+    this.productivityLogs$ = this.apiService.getProductivityLogs();
 
     this.chartData.Labels =  ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'];
     this.chartData.Datas = [5,7,8,3,5,2,29];
@@ -38,22 +38,36 @@ export class Dashboard implements OnInit{
       createLevelDisplay('levelCard', this.dashboardService.getLevelData(result));
     })
 
-    // createStreakDisplay('streakCard', this.dashboardService.getStreakData());
+    this.dailyAnalytics$.subscribe(analytics => {
+      if (!analytics || analytics.length === 0) {
+        console.log("No site visit analytics data received.");
+        return; // Exit if there's no data
+      }
 
-    createCategoriesChart('by-category', this.dashboardService.getCategoriesData(this.dummyData));
-    createTopSitesChart('by-top-sites', this.dashboardService.getTopSitesData(this.dummyData, 5));
-    createTimeSpentChart('by-time-spent', this.dashboardService.getTimeSpentData(this.dummyData), this.dashboardService.getProductiveTimeSpentData(this.dummyData));
+      // --- Logic for Daily Charts (Categories, Top Sites) ---
+      // Sort to find the most recent day's data
+      const mostRecentDay = analytics.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
-    this.siteVisits$.subscribe(result => {
-      createCategoriesChart('by-category', this.dashboardService.getCategoriesData(result));
-      createTopSitesChart('by-top-sites', this.dashboardService.getTopSitesData(result, 5));
-      createTimeSpentChart('by-time-spent', this.dashboardService.getTimeSpentData(result), this.dashboardService.getProductiveTimeSpentData(result));
-    })
+      if (mostRecentDay && mostRecentDay.siteVisits) {
+        // Pass ONLY the most recent day's visits to these charts
+        createCategoriesChart('by-category', this.dashboardService.getCategoriesData(mostRecentDay.siteVisits));
+        createTopSitesChart('by-top-sites', this.dashboardService.getTopSitesData(mostRecentDay.siteVisits, 5));
+      }
 
-    const processedData: HeatmapData = this.dashboardService.processDataForRolling30Days(this.dashboardService.userLogs);
+      // --- Logic for Time-Series Chart (Time Spent) ---
+      // Pass the ENTIRE array of daily analytics to these charts
+      const totalTimeData = this.dashboardService.getTimeSpentData(analytics);
+      const productiveTimeData = this.dashboardService.getProductiveTimeSpentData(analytics);
+      createTimeSpentChart('by-time-spent', totalTimeData, productiveTimeData);
+    });
 
-    // 3. Render the chart into your div
-    createPlotlyHeatmap('heatmap-container', processedData);
+    this.productivityLogs$.subscribe(result => {
+      let processedData = this.dashboardService.processDataForRolling30Days(result);
+      createPlotlyHeatmap('heatmap-container', processedData);
+    });
+
+    
+    
   }
 }
 // --- Charting Functions ---
@@ -279,10 +293,10 @@ function createCategoriesChart(elementId: string, data: CategoriesData) {
     hole: 0.6,
     marker: {
       colors: colors,
-      line: { color: 'rgb(41,42,47)', width: 4 }
+      line: { color: 'rgb(41,42,47)', width: 2 }
     },
     domain: {
-      x: [0, 0.65]
+      x: [0, 0.7]
     },
     textinfo: 'none',
     hovertemplate: '<b>%{label}</b><br>%{percent}<extra></extra>',
@@ -299,15 +313,19 @@ function createCategoriesChart(elementId: string, data: CategoriesData) {
     },
     annotations: data.categories.map((cat, i) => ({
       x: 0.7, // Horizontal position of the labels
-      y: 0.8 - (i * 0.15), // Vertical position, stacking them down
+      y: 0.9 - (i * 0.07), // Vertical position, stacking them down
       xanchor: 'left', // Anchor text to the left
       yanchor: 'top',
       align: 'left',
       // The text includes a colored dot and the category name
-      text: `<span style="color:${colors[i]}; font-size: 20px;">●</span> <span style="position: relative; top: -4px;">${cat.name}</span>`,
+      text: `<span style="color:${colors[i]}; font-size: 16px;">●</span> <span style="position: relative; top: -4px;">${cat.name}</span>`,
       showarrow: false,
-      font: { size: 16, color: 'White', weight: 600},
-    }))
+      font: { size: 12, color: 'White', weight: 600},
+    })),
+    margin:{
+      l: 40,
+      t: 40
+    }
   };
 
   const config: Partial<Plotly.Config> = {
@@ -354,19 +372,21 @@ function createTopSitesChart(elementId: string, data: TopSitesData) {
     },
     bargap: 0.5,
     xaxis: {
+      title: {text: "Minute"},
+      showgrid: true,
       // Hide the x-axis completely
-      visible: false,
+      // visible: false,
       range: [-maxTimeSpent * 0.15, maxTimeSpent],
     },
     yaxis: {
-      
+      showgrid: true,
       automargin: true,
       // Hide the axis line and tick marks for a cleaner look
       showline: false,
       // Style the labels to match the target
       tickfont: {
         size: 14,
-        color: '#A0AEC0'
+        color: '#ffffffff'
       },
     },
   };
@@ -381,28 +401,18 @@ function createTopSitesChart(elementId: string, data: TopSitesData) {
 /**
  * Creates a time spent line chart
  */
-function convertDate(dateString: string) {
-  const parts = dateString.split('/');
-  const month = parseInt(parts[0], 10);
-  const day = parseInt(parts[1], 10);
-
-  const date = new Date(2000, month - 1, day);
-  const monthName = date.toLocaleString('default', { month: 'short' });
-
-  return `${monthName}-${day}`;
-}
-
 function createTimeSpentChart(elementId: string, overallData: TimeSpentData, productiveTimeData: TimeSpentData) {
     // Trace for Productive Time (the bottom line)
   const productiveTrace: Partial<Plotly.Data> = {
     type: 'scatter',
     mode: 'lines+markers',
-    x: productiveTimeData.dates.map(convertDate),
-    y: productiveTimeData.values.map(d => d / 60),
+    // x: productiveTimeData.dates.map(convertDate),
+    x: productiveTimeData.dates,
+    y: productiveTimeData.values.map(d => d / 3600),
     line: { color: '#43E1CB', width: 3, shape: 'spline' }, // A nice Google Blue
     marker: { color: '#43E1CB', size: 8 },
     name: "Productive time",
-    hovertemplate: '<b>Productive time</b>: %{y:.1f} min<extra></extra>'
+    hovertemplate: '<b>Productive time</b>: %{y:.1f} hr<extra></extra>'
     // No fill property here
   };
 
@@ -410,15 +420,16 @@ function createTimeSpentChart(elementId: string, overallData: TimeSpentData, pro
   const totalTrace: Partial<Plotly.Data> = {
     type: 'scatter',
     mode: 'lines+markers',
-    x: overallData.dates.map(convertDate),
-    y: overallData.values.map(d => d / 60),
+    // x: overallData.dates.map(convertDate),
+    x: overallData.dates,
+    y: overallData.values.map(d => d / 3600),
     line: { color: '#F9806E', width: 3, shape: 'spline' }, // A neutral Google Grey
     marker: { color: '#F9806E', size: 8 },
     // This fills the area BETWEEN this trace and the one before it (productiveTrace)
     fill: 'tonexty',
     fillcolor: 'rgba(90, 43, 43, 0.2)', // A reddish color for unproductive time
     name: "Total time",
-    hovertemplate: '<b>Total time</b>: %{y:.1f} min<extra></extra>'
+    hovertemplate: '<b>Total time</b>: %{y:.1f} hr<extra></extra>'
   };
 
   const layout: Partial<Plotly.Layout> = {
@@ -429,14 +440,24 @@ function createTimeSpentChart(elementId: string, overallData: TimeSpentData, pro
       font: { size: 18, color: '#E2E8F0', family: 'Arial, sans-serif' },
       x: 0.02,
       y: 0.95,
-      xanchor: 'left'
+      xanchor: 'left',
     },
     xaxis: {
       showgrid: false,
       zeroline: false,
       showline: false,
       tickfont: { size: 12, color: '#A0AEC0' },
-      range: [-0.5, 10],
+      type: 'date',
+      range: (() => {
+        const now = new Date();
+        const start = new Date(now);
+        start.setDate(now.getDate() - 7); // 5 days before today
+        const end = new Date(now);
+        end.setDate(now.getDate());   // 5 days after today
+        return [start.toISOString(), end.toISOString()];
+      })(),
+      rangeslider: { visible: true },  // 👈 allows scrolling
+      rangemode: 'normal',
     },
     yaxis: {
       showgrid: true,

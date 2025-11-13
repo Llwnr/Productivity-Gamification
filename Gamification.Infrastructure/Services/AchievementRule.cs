@@ -17,7 +17,7 @@ public class AchievementRule<TEvent> : IAchievementRule where TEvent : GameEvent
     public void Evaluate(GameEvent gameEvent, Action<User, string> grantAchievement){
         if (gameEvent is TEvent myGameEvent && _condition(myGameEvent)){
             grantAchievement(myGameEvent.User, _achievementKey);
-            Console.WriteLine("Achievement given for: " + _condition);
+            // Console.WriteLine("Achievement given for: " + _condition);
         }
     }
 }

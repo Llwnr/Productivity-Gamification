@@ -99,7 +99,7 @@ public class ActivityProcessingService : IActivityProcessingService, IStreakMana
             AnalysisResult? analysis = _dbContext.GetAnalysisOfSite(siteVisits[i].SiteId ?? throw new Exception("No site id"), siteVisits[i].UserId);
             if (analysis == null) throw new Exception();
             
-            float expGainAmt = timeSpent * (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore)) ;
+            float expGainAmt = timeSpent * (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore));
             userStat.ExperiencePoints += expGainAmt;
             totalExpGained += expGainAmt;
             
@@ -126,28 +126,50 @@ public class ActivityProcessingService : IActivityProcessingService, IStreakMana
 
     //Calculates the user's productivity time
     async Task CalculateProductivityTime(User user, UserSiteVisit[] visitsToProcess){
-        int productivityThreshold = 50; //Any site which has a productivity score of over 50 is to be selected.
-        ProductivityLog userLog = FindOrCreateTodaysLog(user.UserId);
+        const int productivityThreshold = 50;
 
-        TimeSpan totalProductiveTime = TimeSpan.FromTicks(visitsToProcess
-                .Where(visit => visit.Analysis?.IntrinsicScore >= productivityThreshold && visit.VisitEndDate.HasValue)
-                .Sum(visit => (visit.VisitEndDate.Value - visit.VisitStartDate).Ticks));
-        userLog.ProductiveTime += totalProductiveTime;
+        // Group all visits by their calendar date (ignoring time)
+        var visitsByDay = visitsToProcess.GroupBy(visit => visit.VisitStartDate.Date);
+
+        foreach (var dayGroup in visitsByDay){
+            DateTime logDate = dayGroup.Key;
         
-        TimeSpan totalUnproductiveTime = TimeSpan.FromTicks(visitsToProcess
-            .Where(visit => visit.Analysis?.IntrinsicScore < productivityThreshold && visit.VisitEndDate.HasValue)
-            .Sum(visit => (visit.VisitEndDate.Value - visit.VisitStartDate).Ticks));
-        userLog.UnproductiveTime += totalUnproductiveTime;
+            // Find or create the log for the specific date of this group of visits
+            ProductivityLog userLog = FindOrCreateLogForDate(user.UserId, logDate);
+
+            // Calculate productive time just for this day's visits
+            TimeSpan productiveTimeForDay = TimeSpan.FromTicks(
+                dayGroup
+                    .Where(visit => visit.Analysis?.IntrinsicScore >= productivityThreshold && visit.VisitEndDate.HasValue)
+                    .Sum(visit => (visit.VisitEndDate.Value - visit.VisitStartDate).Ticks)
+            );
+            userLog.ProductiveTime += productiveTimeForDay;
+
+            // Calculate unproductive time just for this day's visits
+            TimeSpan unproductiveTimeForDay = TimeSpan.FromTicks(
+                dayGroup
+                    .Where(visit => visit.Analysis?.IntrinsicScore < productivityThreshold && visit.VisitEndDate.HasValue)
+                    .Sum(visit => (visit.VisitEndDate.Value - visit.VisitStartDate).Ticks)
+            );
+            userLog.UnproductiveTime += unproductiveTimeForDay;
+        }
+        // _dbContext.SaveChanges() will be called later in the main processing method.
     }
     
-    ProductivityLog FindOrCreateTodaysLog(string userId){
-        ProductivityLog? log = _dbContext.ProductivityLogs.FirstOrDefault(log => log.LogDate == DateTime.UtcNow.Date && log.UserId == userId);
+    ProductivityLog FindOrCreateLogForDate(string userId, DateTime targetDate){
+        // Use the .Date property to strip the time component, ensuring we work with whole days.
+        var logForDate = targetDate.Date;
+
+        ProductivityLog? log = _dbContext.ProductivityLogs
+            .FirstOrDefault(log => log.LogDate == logForDate && log.UserId == userId);
+
         if (log == null){
             log = new ProductivityLog{
                 UserId = userId,
-                LogDate = DateTime.UtcNow.Date,
+                LogDate = logForDate, // Set the LogDate to the specific date provided.
             };
             _dbContext.ProductivityLogs.Add(log);
+            // Note: The calling function is expected to call SaveChanges().
         }
         return log;
     }

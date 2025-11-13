@@ -1,7 +1,7 @@
 namespace Gamification.Core.GameModels;
 
 public static class ExperienceTableProgressionRule{
-    private static int BaseExpThreshold = 1000;
+    private static int BaseExpThreshold = 10000;
     private static float Exponent = 1.5f;
     public static float[] ExpTable = new float[500]; //
 

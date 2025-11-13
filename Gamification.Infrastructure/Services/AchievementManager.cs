@@ -39,7 +39,7 @@ public class AchievementManager : BackgroundService{
                     
                 bool achievementAlreadyOwned = dbContext.UserAchievements.Any(ua => ua.UserId == user.UserId && ua.Achievement.Key == achievementKey);
                 if (achievementAlreadyOwned){
-                    _logger.LogInformation("The user already owns this achievement.");
+                    // _logger.LogInformation("The user already owns this achievement.");
                     return;
                 }
                     

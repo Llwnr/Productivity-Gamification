@@ -82,6 +82,20 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// if (app.Environment.IsDevelopment()){
+//     using (var scope = app.Services.CreateScope()){
+//         var services = scope.ServiceProvider;
+//         var dbContext = services.GetRequiredService<ProductivityDbContext>();
+//         
+//         // Optional: Ensure the database is created and migrations are applied
+//         // await dbContext.Database.MigrateAsync();
+//
+//         var seeder = new DataSeeder(dbContext);
+//         // Call the new method to add data up to the target
+//         await seeder.SeedAdditionalDataAsync(10000); 
+//     }
+// }
+
 using (var scope = app.Services.CreateScope()){
     var services = scope.ServiceProvider;
     // Console.WriteLine("Eagerly loading the ContentAnalysisFilter service...");
