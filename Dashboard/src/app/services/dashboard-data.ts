@@ -157,7 +157,7 @@ export class DashboardData {
     const dates = sortedAnalytics.map(day => new Date(day.date));
     const values = sortedAnalytics.map(day =>
       day.siteVisits
-        .filter(visit => visit.baseProductiveScore >= 25) // Your productivity threshold
+        .filter(visit => visit.baseProductiveScore >= 50) // Your productivity threshold
         .reduce((total, visit) => total + visit.timeSpent, 0)
     );
 

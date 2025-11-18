@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="dataSourceStorageLocal" created-in="RD-251.27812.87">
-    <data-source name="productivity_gamification@localhost" uuid="2b00927d-4e6e-468a-8ed8-819a053af7d5">
-      <database-info product="PostgreSQL" version="17.5" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.7.3" dbms="POSTGRES" exact-version="17.5" exact-driver-version="42.7">
+  <component name="dataSourceStorageLocal" created-in="RD-253.28294.112">
+    <data-source name="productivity_gamification@localhost" uuid="0958584c-fa03-45b3-b8d5-64863464e61f">
+      <database-info product="PostgreSQL" version="18.1" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.7.3" dbms="POSTGRES" exact-version="18.1" exact-driver-version="42.7">
         <identifier-quote-string>&quot;</identifier-quote-string>
       </database-info>
       <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact" />
       <secret-storage>master_key</secret-storage>
-      <auth-provider>no-auth</auth-provider>
+      <user-name>postgres</user-name>
       <schema-mapping>
         <introspection-scope>
           <node kind="database" qname="@">

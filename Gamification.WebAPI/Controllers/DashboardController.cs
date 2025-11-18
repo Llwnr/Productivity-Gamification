@@ -80,7 +80,8 @@ public class DashboardController : ControllerBase{
                                           ? analysis.Category[0] 
                                           : "Unknown";
                     float baseProductiveScore = (analysis != null)
-                                                ? (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore))
+                                                // ? (float)(analysis.IntrinsicScore * 0.5 * (0.5f + analysis.RelevanceScore))
+                                                ? (float)analysis.IntrinsicScore
                                                 : 0;
 
                     return new SiteVisitRecordDTO{
