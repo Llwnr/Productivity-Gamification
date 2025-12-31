@@ -4,9 +4,20 @@ import { Observable,map } from 'rxjs';
 import { DailyAnalyticsDTO, ProductivityLog } from './dashboard-data';
 
 export interface GameStat{
+  username: string,
   coin: number,
   experiencePoints: number,
-  level: number
+  nextLvlPercentage: string,
+  level: number,
+  totalAchievements: number,
+  dailyStreak: number,
+  weeklyStreak: number
+}
+
+export interface Achievement {
+  title: string;
+  description: string;
+  earnedAt: string;
 }
 
 @Injectable({
@@ -19,7 +30,7 @@ export class Api {
 
   getDashboardStat(): Observable<GameStat>{
     const options = {withCredentials: true};
-    return this.http.get<GameStat[]>(`${this.apiUrl}/Dashboard/UserStat`, options).pipe(map(array => array[0]));
+    return this.http.get<GameStat>(`${this.apiUrl}/Dashboard/UserStat`, options);
   }
 
   getUserSiteVisits(): Observable<DailyAnalyticsDTO[]>{
@@ -30,5 +41,24 @@ export class Api {
   getProductivityLogs(): Observable<ProductivityLog[]>{
     const options = {withCredentials: true};
     return this.http.get<ProductivityLog[]>(`${this.apiUrl}/Dashboard/ProductivityLogs`, options);
+  }
+
+  getUserAchievements(): Observable<Achievement[]> {
+    const options = {withCredentials: true};
+    return this.http.get<Achievement[]>(`${this.apiUrl}/Dashboard/Achievements`, options);
+  }
+
+  logout() {
+    // The options object with withCredentials
+    const options = {
+      withCredentials: true
+    };
+
+    // Use .post() and subscribe to send the request
+    this.http.post(`${this.apiUrl}/Authentication/Logout`, null, options) // Use null for the body if it's empty
+      .subscribe({
+        next: () => console.log('Logout successful'),
+        error: (err) => console.error('Logout failed:', err)
+      });
   }
 }

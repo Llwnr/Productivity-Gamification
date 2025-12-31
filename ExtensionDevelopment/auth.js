@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         credentials: 'include'
     })
     if(res.ok){
-        chrome.tabs.create({ url: chrome.runtime.getURL('Dashboard/dashboard.html') });
+        chrome.tabs.create({ url: 'http://localhost:4200/dashboard' });
         window.close(); // Close the popup if it's a popup  
     }
      else if (res.status === 401 || res.status === 403) {
@@ -35,8 +35,8 @@ loginForm.addEventListener('submit', async(e)=>{
     })
         .then(res => {
             if (res.ok) {
-                console.log(res.text());
-                chrome.tabs.create({ url: chrome.runtime.getURL('Dashboard/dashboard.html') });
+                console.log(res.text() + "ayo thats sus man");
+                chrome.tabs.create({ url: "http://localhost:4200/dashboard" });
                 window.close(); // Close the popup if it's a popup  
             } else {
                 console.error("Login failed");

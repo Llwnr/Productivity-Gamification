@@ -1,59 +1,52 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
 <div class="sidebar">
-    <!-- Sidebar content -->
+    <div class="sidebar-header">
+        <div class="user-profile-info" *ngIf="stat$ | async as stat">
+            <h1 class="username">Hello! {{stat.username}}</h1>
+            <div class="level-progress-container">
+                <span class="level">Lv. {{stat.level}}</span>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" style="width: 30%;"></div>
+                </div>&nbsp;&nbsp;{{stat.nextLvlPercentage}}%
+            </div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="#" class="nav-item active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="#" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+        <a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="nav-item" (click)="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </nav>
 </div>
 
-<!-- Main container for the dashboard -->
 <div class="dashboard-container">
-
-    <!-- NEW: A header to group user info and streak cards -->
     <header class="dashboard-header">
-        
-        <!-- MOVED: Your stats-section now acts as the user info block on the left -->
-        <!-- I've added a placeholder for a username, assuming it comes from your 'stat' object -->
-        <section class="stats-section">
-            <div class="user-profile-info">
-                <h1 class="username">Hello! Llwnr</h1>
-                <div class="level-progress-container">
-                    <span class="level">Lv. 5</span>
-                    <div class="progress-bar">
-                        <!-- You can bind the width dynamically, e.g., [style.width.%]="getExperiencePercentage(stat)" -->
-                        <div class="progress-bar-fill" style="width: 30%;"></div>
-                    </div>&nbsp;&nbsp;28%
-                </div>
-            </div>
-        </section>
-
-        <!-- MOVED: Your statCards for the diamonds on the right -->
-        <!-- EXAMPLE: You would loop through an array of stats for these cards -->
-        <div class="statCards">
-            <!-- This is just an example of how you might render them dynamically -->
-            <!-- @for (streak of streaks; track $index) { -->
+        <div class="statCards" *ngIf="stat$ | async as stat">
             <div class="streakCard">
-                <div *ngIf="stat$ | async as stat" class="diamond-content">
-                    <span class="stat-value">{{stat.level}}</span> <!-- {{ streak.value }} -->
-                    <span class="stat-label">Level</span> <!-- {{ streak.label }} -->
+                <div class="diamond-content">
+                    <span class="stat-value">{{stat.level}}</span>
+                    <span class="stat-label">Level</span>
                 </div>
             </div>
             <div class="streakCard">
                 <div class="diamond-content">
-                    <span class="stat-value">5</span>
-                    <span class="stat-label">Focus Time</span>
-                </div>
-            </div>
-            <div class="streakCard">
-                <div class="diamond-content">
-                    <span class="stat-value">5</span>
+                    <span class="stat-value">{{stat.totalAchievements}}</span>
                     <span class="stat-label">Achievements</span>
                 </div>
             </div>
             <div class="streakCard">
                 <div class="diamond-content">
-                    <span class="stat-value">5</span>
-                    <span class="stat-label">Weekly Stream</span>
+                    <span class="stat-value">{{stat.dailyStreak}}</span>
+                    <span class="stat-label">Daily Streak</span>
+                </div>
+            </div>
+            <div class="streakCard">
+                <div class="diamond-content">
+                    <span class="stat-value">{{stat.weeklyStreak}}</span>
+                    <span class="stat-label">Weekly Streak</span>
                 </div>
             </div>
             <!-- } -->
@@ -61,12 +54,27 @@
 
     </header>
 
-    <!-- Your original charts-grid, now styled as the main content area -->
     <div class="charts-grid">
         <div id="by-category"></div>
         <div id="by-top-sites"></div>
         <div id="by-time-spent"></div>
         <div id="heatmap-container"></div>
         <div id="heatmap-container"></div>
+    </div>
+    <h2 style="margin-top: 40px; margin-bottom: 15px; color: #E2E8F0;">Recent Achievements</h2>
+    
+    <div class="achievements-grid">
+        <div *ngFor="let ach of achievements$ | async" class="achievement-card">
+            <div class="ach-content">
+                <h3 class="ach-title">{{ ach.title }}</h3>
+                <p class="ach-desc">{{ ach.description }}</p>
+                <small class="ach-date">Earned: {{ ach.earnedAt | date:'mediumDate' }}</small>
+            </div>
+        </div>
+        
+        <!-- Fallback if no achievements -->
+        <div *ngIf="(achievements$ | async)?.length === 0" style="color: #b0b0b0;">
+            No achievements earned yet. Keep working!
+        </div>
     </div>
 </div>

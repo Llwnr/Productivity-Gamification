@@ -1,9 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Api, GameStat } from '../services/api';
+import { Api, GameStat, Achievement } from '../services/api';
 import { Observable } from 'rxjs';
 import * as Plotly from 'plotly.js-dist-min';
-import { DashboardData, PointsData, ExpGaugeData, LevelData, StreakData, CategoriesData, TopSitesData, TimeSpentData, DailyUsageData, HeatmapData, ProductivityLog, DailyAnalyticsDTO } from '../services/dashboard-data';
+import { DashboardData, PointsData, ExpGaugeData, 
+  LevelData, StreakData, CategoriesData, 
+  TopSitesData, TimeSpentData, DailyUsageData, 
+  HeatmapData, ProductivityLog, DailyAnalyticsDTO } from '../services/dashboard-data';
 
 @Component({
   standalone: true,
@@ -22,15 +25,21 @@ export class Dashboard implements OnInit{
   public stat$?: Observable<GameStat>;
   public dailyAnalytics$? : Observable<DailyAnalyticsDTO[]>;
   public productivityLogs$? : Observable<ProductivityLog[]>;
+  public achievements$?: Observable<Achievement[]>;
+
+  logout(): void{
+      this.apiService.logout();
+  }    
 
   ngOnInit(): void{
     this.stat$ = this.apiService.getDashboardStat();
     this.dailyAnalytics$ = this.apiService.getUserSiteVisits();
     this.productivityLogs$ = this.apiService.getProductivityLogs();
+    this.achievements$ = this.apiService.getUserAchievements();
 
-    this.chartData.Labels =  ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'];
-    this.chartData.Datas = [5,7,8,3,5,2,29];
-    this.chartData.Add([],["Pink"]);
+    // this.chartData.Labels =  ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'];
+    // this.chartData.Datas = [5,7,8,3,5,2,29];
+    // this.chartData.Add([],["Pink"]);
 
     this.stat$.subscribe(result => {
       createPointsDisplay('pointsCard', this.dashboardService.getPointsData(result));
@@ -44,7 +53,6 @@ export class Dashboard implements OnInit{
         return; // Exit if there's no data
       }
 
-      // --- Logic for Daily Charts (Categories, Top Sites) ---
       // Sort to find the most recent day's data
       const mostRecentDay = analytics.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
@@ -53,8 +61,6 @@ export class Dashboard implements OnInit{
         createCategoriesChart('by-category', this.dashboardService.getCategoriesData(mostRecentDay.siteVisits));
         createTopSitesChart('by-top-sites', this.dashboardService.getTopSitesData(mostRecentDay.siteVisits, 5));
       }
-
-      // --- Logic for Time-Series Chart (Time Spent) ---
       // Pass the ENTIRE array of daily analytics to these charts
       const totalTimeData = this.dashboardService.getTimeSpentData(analytics);
       const productiveTimeData = this.dashboardService.getProductiveTimeSpentData(analytics);
@@ -465,7 +471,7 @@ function createTimeSpentChart(elementId: string, overallData: TimeSpentData, pro
       zeroline: false,
       showline: false,
       tickfont: { size: 12, color: '#A0AEC0' },
-      ticksuffix: ' min',
+      ticksuffix: ' hr',
     },
     legend: {
       font: { size: 12, color: '#E2E8F0' },
@@ -530,7 +536,6 @@ function createPlotlyHeatmap(
         hoverongaps: false,
     };
 
-    // --- THIS IS THE KEY FIX ---
     // Conditionally set the texttemplate to format the z-value.
     if (showValuesOnCells) {
         // This template tells Plotly:

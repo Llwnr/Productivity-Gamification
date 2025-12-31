@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Gamification.Core.GameModels;
 using Gamification.Core.Models;
 using Gamification.Infrastructure.DatabaseService;
 using Gamification.WebAPI.Models;
@@ -27,7 +28,20 @@ public class DashboardController : ControllerBase{
     [HttpGet("UserStat")]
     public IActionResult SendUserStat(){
         _logger.LogInformation("Sent user's stats");
-        return Ok(_dbContext.GameStats.Where(u => u.UserId == UserId));
+        GameStat userGameStat = _dbContext.GameStats.First(u => u.UserId == UserId);
+        float expForNextLevel = ExperienceTableProgressionRule.ExpTable[userGameStat.Level+1];
+        GameStatDTO gameStatDto = new GameStatDTO {
+            Username = _dbContext.Users.First(u => u.UserId == UserId).Username,
+            Coin = userGameStat.Coin,
+            ExperiencePoints = userGameStat.ExperiencePoints,
+            Level = userGameStat.Level,
+            NextLvlPercentage = (userGameStat.ExperiencePoints/expForNextLevel).ToString("F00"),
+            TotalAchievements = _dbContext.UserAchievements.Count(u => u.UserId == UserId),
+            DailyStreak = userGameStat.DailyStreakCount,
+            WeeklyStreak = userGameStat.WeeklyStreakCount
+        };
+        
+        return Ok(gameStatDto);
     }
 
     [Authorize]
@@ -98,5 +112,24 @@ public class DashboardController : ControllerBase{
         }
 
         return Ok(dailyAnalytics);
+    }
+    
+    [Authorize]
+    [HttpGet("Achievements")]
+    public IActionResult GetUserAchievements() {
+        var achievements = _dbContext.UserAchievements
+            .Include(ua => ua.Achievement)
+            .Where(ua => ua.UserId == UserId)
+            .OrderByDescending(ua => ua.EarnedAt)
+            .Select(ua => new AchievementDTO
+            {
+                Title = ua.Achievement.Title,
+                Description = ua.Achievement.Description,
+                EarnedAt = ua.EarnedAt
+            })
+            .ToList();
+
+        _logger.LogInformation($"Sent {achievements.Count} achievements to user.");
+        return Ok(achievements);
     }
 }

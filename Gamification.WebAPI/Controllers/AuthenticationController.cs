@@ -48,7 +48,9 @@ public class AuthenticationController : ControllerBase{
                     Secure = true,
                     SameSite = SameSiteMode.None,
                     Expires = DateTimeOffset.UtcNow.AddDays(30),
-                    IsEssential = true
+                    IsEssential = true,
+                    Path = "/",
+                    Domain = "localhost"
                 });
             
             return Ok(new {message = "Login Successful!"});
@@ -66,9 +68,11 @@ public class AuthenticationController : ControllerBase{
             new CookieOptions{
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddDays(-1),
-                IsEssential = true
+                IsEssential = true,
+                Path = "/",
+                Domain = "localhost"
             });
 
         _logger.LogInformation("Logged out!");

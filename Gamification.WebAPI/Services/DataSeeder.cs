@@ -57,8 +57,8 @@ namespace Gamification.WebAPI.Services
         /// </summary>
         private async Task CreateSequentialUserVisits(List<User> users, List<Site> sites, int totalVisitsToAdd)
         {
-            var startDate = new DateTime(2025, 11, 1, 0, 0, 0, DateTimeKind.Utc);
-            var endDate = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc);
+            var startDate = new DateTime(2025, 11, 20, 0, 0, 0, DateTimeKind.Utc);
+            var endDate = new DateTime(2025, 11, 26, 0, 0, 0, DateTimeKind.Utc);
 
             var newVisits = new List<UserSiteVisit>();
             var newAnalysisResults = new List<AnalysisResult>();

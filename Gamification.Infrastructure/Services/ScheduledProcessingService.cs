@@ -31,7 +31,7 @@ public class ScheduledProcessingService : BackgroundService{
 
     private async Task ExecutePeriodicAsync(CancellationToken stoppingToken){
         while (!stoppingToken.IsCancellationRequested){
-            await Task.Delay(1000*5, stoppingToken);
+            await Task.Delay(1000*60*5, stoppingToken);
             using (var scope = _scopeFactory.CreateScope()){
                 IActivityProcessingService  activityProcessingService = scope.ServiceProvider.GetRequiredService<IActivityProcessingService>();
                 _logger.LogInformation("Processing score...");

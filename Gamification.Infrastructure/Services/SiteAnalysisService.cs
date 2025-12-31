@@ -39,6 +39,7 @@ public class SiteAnalysisService : ISiteAnalysisService{
         ClearRedundantPrompts(prompts);
 
         List<SiteAnalysis>? analysisResults = (await _googleApi.Generate(prompts.ToList())).Analyses;
+        
         _logger.LogInformation("Total no. of analyses: " + analysisResults.Count);
         if (analysisResults == null || analysisResults.Count <= 0){
             _logger.LogInformation("Error, analysis result is empty");

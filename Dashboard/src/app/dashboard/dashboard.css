@@ -10,41 +10,78 @@ body, html {
     color: white;
     box-sizing: border-box;
 }
-
-/* --- Sidebar --- */
+/* Sidebar design */
 .sidebar {
     width: 280px;
     height: 100%;
     position: fixed;
     top: 0;
     left: 0;
-    background-color: rgb(27, 21, 35);
+    background: rgba(27, 21, 35, 0.8);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
 }
 
-/* --- Main Dashboard Container --- */
+.sidebar-header {
+    margin-bottom: 40px;
+}
+
+.sidebar-nav .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #b0b0b0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.sidebar-nav .nav-item i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-nav .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.sidebar-nav .nav-item.active {
+    background-color: #43E1CB;
+    color: #1b1523;
+    font-weight: bold;
+}
+
+
+
+/* Main dashboard body */
 .dashboard-container {
     margin-left: 280px;
     padding: 30px;
 }
 
-/* --- NEW: Header Layout --- */
 .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 30px;
+    order: -1;
+    padding: 20px;
 }
 
-/* --- Styling the User Info Section (Your .stats-section) --- */
 .stats-section {
-    /* Resetting any previous styling */
     padding: 0;
     margin: 0;
     background: none;
 }
 
 .user-profile-info .username {
-    font-size: 2.8em;
+    font-size: 2.2em;
     margin: 0 0 10px 0;
     font-weight: 500;
 }
@@ -75,16 +112,16 @@ body, html {
     background-color: #43E1CB;
 }
 
-/* --- Styling YOUR .statCards into Diamonds --- */
 .statCards {
+    width: 100%;
     display: flex;
+    justify-content: space-around;
+    align-items: center;
 }
 
-/* Targeting each card (e.g., .streakCard) inside .statCards */
 .statCards > div {
-    width: 150px;
-    height: 90px;
-    margin-left: 20px;
+    width: 200px;
+    height: 120px;
     border-radius: 5px;
     background-color: rgb(41, 42, 47);
     border: 1px solid rgb(60, 61, 66);
@@ -93,7 +130,6 @@ body, html {
     align-items: center;
 }
 
-/* This container holds the dynamic content and rotates it back */
 .diamond-content {
     display: flex;
     flex-direction: column;
@@ -112,11 +148,9 @@ body, html {
     width: 150%;
 }
 
-/* --- Styling YOUR .charts-grid as the Main Content Area --- */
 .charts-grid {
     width: 100%;
     min-height: 450px;
-    /* Your original flex properties */
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -125,14 +159,54 @@ body, html {
 .charts-grid div {
     border: 1px solid rgb(60, 61, 66);
     min-width: 0px;
-    height: 400px; /* Give them a fixed height or min-height */
+    height: 400px; 
 }
 #by-category{flex: 1 1 300px;}
 #by-top-sites{flex: 1 1 400px;}
 #by-time-spent {
-    /* Each will take up roughly 50% of the width, minus the gap */
     flex: 1 1 700px;
 }
 #heatmap-container{
     flex: 1 1 300px;
+}
+
+/* Achievements */
+/* --- Achievements Grid --- */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding-bottom: 50px;
+}
+
+.achievement-card {
+    background-color: #292A2F; /* Matches your chart bg */
+    border: 1px solid rgb(60, 61, 66);
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s;
+}
+
+.achievement-card:hover {
+    transform: translateY(-3px);
+    border-color: #43E1CB; /* Your productive color */
+}
+
+.ach-title {
+    margin: 0 0 10px 0;
+    color: #43E1CB;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.ach-desc {
+    margin: 0 0 15px 0;
+    color: #A0AEC0;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.ach-date {
+    color: #5c6066;
+    font-size: 0.8em;
 }

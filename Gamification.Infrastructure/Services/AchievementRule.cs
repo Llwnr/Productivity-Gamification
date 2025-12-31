@@ -37,9 +37,6 @@ public static class AchievementRules
         new AchievementRule<LevelUpEvent>("level_25", e => e.NewLevel >= 25),
         new AchievementRule<LevelUpEvent>("level_50", e => e.NewLevel >= 50),
         new AchievementRule<LevelUpEvent>("level_100", e => e.NewLevel >= 100),
-
-        // --- Cumulative Achievements (Evaluated after all processing is finished) ---
-        // Note: These assume the GameStat on the User object is up-to-date when the event is fired.
         
         // Daily Time
         new AchievementRule<ProcessingFinishedEvent>("daily_1_hour", e => e.User.GameStat.ProductivityMetrics.TryGetValue(GameStat.TimeFrequency.Daily, out var time) && time.TotalHours >= 1),

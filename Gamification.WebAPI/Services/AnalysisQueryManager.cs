@@ -30,7 +30,6 @@ public class AnalysisQueryManager : BackgroundService, IAnalysisQueryManager
 
     // The core execution logic of the background service
     protected override async Task ExecuteAsync(CancellationToken stoppingToken){
-        _logger.LogInformation("Are you even running");
         int batchInterval = 60*1000*7;
         int minimumPromptLimit = 5;
         while (!stoppingToken.IsCancellationRequested){

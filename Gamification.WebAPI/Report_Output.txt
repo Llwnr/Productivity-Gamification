@@ -1,0 +1,67 @@
+APPENDIX A: FULL TEST DATASET FOR CLASSIFICATION ACCURACY
+-------------------------------------------------------------------------------------------------------------------
+| #   | URL                                      | Score      | AI Class        | Actual          | Result     |
+-------------------------------------------------------------------------------------------------------------------
+| 1   | stackoverflow.com                        | 85         | Productive      | Productive      | TP         |
+| 2   | github.com                               | 90         | Productive      | Productive      | TP         |
+| 3   | learn.microsoft.com                      | 88         | Productive      | Productive      | TP         |
+| 4   | w3schools.com                            | 80         | Productive      | Productive      | TP         |
+| 5   | udemy.com                                | 75         | Productive      | Productive      | TP         |
+| 6   | coursera.org                             | 90         | Productive      | Productive      | TP         |
+| 7   | chatgpt.com                              | 90         | Productive      | Productive      | TP         |
+| 8   | claude.ai                                | 90         | Productive      | Productive      | TP         |
+| 9   | developer.mozilla.org                    | 92         | Productive      | Productive      | TP         |
+| 10  | geeksforgeeks.org                        | 85         | Productive      | Productive      | TP         |
+| 11  | jira.atlassian.com                       | 88         | Productive      | Productive      | TP         |
+| 12  | trello.com                               | 80         | Productive      | Productive      | TP         |
+| 13  | notion.so                                | 85         | Productive      | Productive      | TP         |
+| 14  | figma.com                                | 88         | Productive      | Productive      | TP         |
+| 15  | canva.com                                | 78         | Productive      | Productive      | TP         |
+| 16  | scholar.google.com                       | 95         | Productive      | Productive      | TP         |
+| 17  | researchgate.net                         | 88         | Productive      | Productive      | TP         |
+| 18  | arxiv.org                                | 92         | Productive      | Productive      | TP         |
+| 19  | kaggle.com                               | 88         | Productive      | Productive      | TP         |
+| 20  | leetcode.com                             | 85         | Productive      | Productive      | TP         |
+| 21  | hackerrank.com                           | 82         | Productive      | Productive      | TP         |
+| 22  | pluralsight.com                          | 85         | Productive      | Productive      | TP         |
+| 23  | docs.google.com                          | 80         | Productive      | Productive      | TP         |
+| 24  | sheets.google.com                        | 80         | Productive      | Productive      | TP         |
+| 25  | slack.com                                | 85         | Productive      | Productive      | TP         |
+| 26  | facebook.com                             | 20         | Unproductive    | Unproductive    | TN         |
+| 27  | instagram.com                            | 20         | Unproductive    | Unproductive    | TN         |
+| 28  | tiktok.com                               | 15         | Unproductive    | Unproductive    | TN         |
+| 29  | twitter.com                              | 30         | Unproductive    | Unproductive    | TN         |
+| 30  | reddit.com                               | 50         | Productive      | Unproductive    | FP         |
+| 31  | netflix.com                              | 10         | Unproductive    | Unproductive    | TN         |
+| 32  | hulu.com                                 | 10         | Unproductive    | Unproductive    | TN         |
+| 33  | disneyplus.com                           | 10         | Unproductive    | Unproductive    | TN         |
+| 34  | twitch.tv                                | 15         | Unproductive    | Unproductive    | TN         |
+| 35  | youtube.com                              | 40         | Unproductive    | Unproductive    | TN         |
+| 36  | steam.com                                | 30         | Unproductive    | Unproductive    | TN         |
+| 37  | roblox.com                               | 15         | Unproductive    | Unproductive    | TN         |
+| 38  | ign.com                                  | 50         | Productive      | Unproductive    | FP         |
+| 39  | gamespot.com                             | 50         | Productive      | Unproductive    | FP         |
+| 40  | amazon.com                               | 70         | Productive      | Unproductive    | FP         |
+| 41  | ebay.com                                 | 65         | Productive      | Unproductive    | FP         |
+| 42  | etsy.com                                 | 60         | Productive      | Unproductive    | FP         |
+| 43  | shein.com                                | 60         | Productive      | Unproductive    | FP         |
+| 44  | temu.com                                 | 60         | Productive      | Unproductive    | FP         |
+| 45  | 9gag.com                                 | 10         | Unproductive    | Unproductive    | TN         |
+| 46  | buzzfeed.com                             | 30         | Unproductive    | Unproductive    | TN         |
+| 47  | tmz.com                                  | 20         | Unproductive    | Unproductive    | TN         |
+| 48  | dailymail.co.uk                          | 30         | Unproductive    | Unproductive    | TN         |
+| 49  | espn.com                                 | 50         | Productive      | Unproductive    | FP         |
+| 50  | bleacherreport.com                       | 50         | Productive      | Unproductive    | FP         |
+-------------------------------------------------------------------------------------------------------------------
+
+=== FINAL RESULTS ===
+Total Sites: 50
+True Positives (TP): 25
+True Negatives (TN): 15
+False Positives (FP): 10
+False Negatives (FN): 0
+
+Accuracy:  80.00%
+Precision: 0.7143
+Recall:    1.0000
+F1 Score:  0.8333
