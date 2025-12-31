@@ -1,9 +1,6 @@
-# .
+# Productivity Gamification
+Browsing activity is analyzed with AI and gamified with scores.
+Demo:
+<img width="1920" height="980" alt="image" src="https://github.com/user-attachments/assets/9a84d53e-99fc-4fbf-832a-bc0aa925ee58" />
+<img width="1445" height="575" alt="image" src="https://github.com/user-attachments/assets/b6218c2b-8dc8-45b3-8fe4-7ad66ada8edb" />
 
-The primary objectives for this project are:
-⦁	To develop an automated system that monitors user’s desktop and browser activity.
-⦁	To implement a smart system that correctly categorizes these monitored activities to label their value.
-⦁	To develop a system that rewards productive activities of the user & provide visual responses.
-⦁	To integrate entertaining & fun game elements such as points, levels, XP, streaks.
-⦁	To offer focused customization based on user’s preferred goals & objectives.
-⦁	To develop a holistic web application as the central dashboard, allowing users to interact with the system, settings & interact with the game elements.
