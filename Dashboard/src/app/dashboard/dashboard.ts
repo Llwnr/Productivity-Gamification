@@ -1,8 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Api, GameStat, Achievement } from '../services/api';
 import { Observable } from 'rxjs';
 import * as Plotly from 'plotly.js-dist-min';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DashboardData, PointsData, ExpGaugeData, 
   LevelData, StreakData, CategoriesData, 
   TopSitesData, TimeSpentData, DailyUsageData, 
@@ -86,9 +87,6 @@ function formatUrlForDisplay(url: string): string {
 
   let domainName = '';
 
-  // If there are 3 or more parts (e.g., 'app.slack.com'), we want the second-to-last one.
-  // If there are 2 parts (e.g., 'github.com'), we also want the second-to-last one (which is the first part).
-  // This logic correctly handles both cases.
   if (parts.length >= 2) {
     domainName = parts[parts.length - 2];
   } else {
@@ -112,9 +110,7 @@ const darkThemeLayout: Partial<Plotly.Layout> = {
   showlegend: false,
 };
 
-/**
- * Creates a points display card (large number display)
- */
+
 //#region CHART CREATION
 function createPointsDisplay(elementId: string, data: PointsData) {
   const trace: Partial<Plotly.PlotData> = {
